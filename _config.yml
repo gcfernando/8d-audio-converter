@@ -1,0 +1,29 @@
+# GitHub Pages documentation site; does not configure application deployment.
+url: "https://gcfernando.github.io"
+baseurl: "/audio-8d"
+title: "Audio8D"
+description: "FFmpeg-based 8D audio converter for Windows and Linux, with desktop and command-line interfaces and MP3, FLAC, WAV, M4A and Opus output."
+lang: "en"
+plugins:
+  - jekyll-sitemap
+exclude:
+  - packages
+  - bin
+  - obj
+  - node_modules
+  - vendor
+  - tests
+  - .claude
+  - .agents
+  - .codex
+defaults:
+  - scope:
+      path: "README.md"
+    values:
+      title: "Audio8D — FFmpeg 8D Audio Converter for Windows and Linux"
+      description: "FFmpeg-based 8D audio converter for Windows and Linux, with desktop and command-line interfaces and MP3, FLAC, WAV, M4A and Opus output."
+  - scope:
+      path: "THIRD-PARTY-NOTICES.md"
+    values:
+      title: "Third-party software in Audio8D"
+      description: "Audio8D is developed by Gehan Fernando. The standalone app (Audio8D and audio8d-cli; Audio8D.exe and audio8d-cli.exe on Windows) ships with the following third-party software. Each keeps…"
