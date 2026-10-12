@@ -26,3 +26,9 @@ FFmpeg is free software under the GNU GPL v3. Audio8D runs the unmodified `ffmpe
 - **macOS:** no macOS package has been built yet. When one is, it uses the static builds from <https://www.osxexperts.net/> (Apple silicon) or <https://evermeet.cx/ffmpeg/> (Intel), and this list will name the version.
 
 Under the GPL you may also ask whoever gave you this copy of Audio8D for the corresponding source code.
+
+---
+
+## Documentation links
+
+[Read all Audio8D guides online](https://gcfernando.github.io/audio-8d/documentation/) · [Project overview](https://gcfernando.github.io/audio-8d/) · [All developer projects](https://gcfernando.github.io/gcfernando/projects/)

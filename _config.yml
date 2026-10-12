@@ -27,3 +27,9 @@ defaults:
     values:
       title: "Third-party software in Audio8D"
       description: "Audio8D is developed by Gehan Fernando. The standalone app (Audio8D and audio8d-cli; Audio8D.exe and audio8d-cli.exe on Windows) ships with the following third-party software. Each keeps…"
+
+# Public documentation navigation and presentation.
+repository: gcfernando/audio-8d
+theme: jekyll-theme-primer
+projects_hub: https://gcfernando.github.io/gcfernando/projects/
+project_category: "Audio & desktop"

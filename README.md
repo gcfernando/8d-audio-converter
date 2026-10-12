@@ -1,5 +1,5 @@
 <!-- Developed by ::> Gehan Fernando -->
-<div align="center">
+<div align="center" markdown="1">
 
 <img src="docs/images/logo.png" alt="The Audio8D icon: white headphones on a purple-to-pink rounded square." width="120"/>
 
@@ -465,7 +465,7 @@ all-songs output settings (see [Known limitations](#known-limitations)).
 Audio8D can also **suggest** a style for each song from its genre: click **Use suggested
 styles** on step 2 (it only changes songs where the genre makes the choice clear).
 
-<details>
+<details markdown="1">
 <summary><strong>Where the styles come from</strong> (standards and practice behind them)</summary>
 
 #### Where the styles come from
@@ -881,7 +881,7 @@ helping you.
 The window and the command line offer **the same features** and share the same rules, the
 same styles and the same Settings (FFmpeg, Python, your styles). Use whichever you like.
 
-<details>
+<details markdown="1">
 <summary><strong>Which window control matches which command-line option</strong></summary>
 
 | In the window | On the command line |
@@ -1187,7 +1187,7 @@ styles above, also set how the file is saved).
 > In the window, **Settings → System check** says what is wrong and what to do; on the
 > command line, `--check` does the same and shows where the log file is.
 
-<details>
+<details markdown="1">
 <summary><strong>Audio8D cannot find FFmpeg, or every song fails</strong></summary>
 
 ### Audio8D cannot find FFmpeg, or every song fails
@@ -1209,7 +1209,7 @@ Audio8D opens **Settings → System check** by itself and says what is wrong.
 
 </details>
 
-<details>
+<details markdown="1">
 <summary><strong>The package won't start</strong></summary>
 
 ### The package won't start
@@ -1224,7 +1224,7 @@ Audio8D opens **Settings → System check** by itself and says what is wrong.
 
 </details>
 
-<details>
+<details markdown="1">
 <summary><strong>The song cannot be processed</strong></summary>
 
 ### The song cannot be processed
@@ -1235,7 +1235,7 @@ Other songs are not affected.
 
 </details>
 
-<details>
+<details markdown="1">
 <summary><strong>Preview does not play</strong></summary>
 
 ### Preview does not play
@@ -1247,7 +1247,7 @@ Other songs are not affected.
 
 </details>
 
-<details>
+<details markdown="1">
 <summary><strong>Output folder cannot be written</strong></summary>
 
 ### Output folder cannot be written
@@ -1258,7 +1258,7 @@ open.
 
 </details>
 
-<details>
+<details markdown="1">
 <summary><strong>Nothing was created: "Nothing new to create"</strong></summary>
 
 ### Nothing was created
@@ -1268,7 +1268,7 @@ file exists: Replace it** on step 3; on the command line add `--overwrite`.
 
 </details>
 
-<details>
+<details markdown="1">
 <summary><strong>The add-on will not install</strong></summary>
 
 ### The add-on will not install
@@ -1282,7 +1282,7 @@ file exists: Replace it** on step 3; on the command line add `--overwrite`.
 
 </details>
 
-<details>
+<details markdown="1">
 <summary><strong>I customized a song by accident</strong></summary>
 
 ### I customized a song by accident
@@ -1292,7 +1292,7 @@ when you click **Apply**; **Cancel** changes nothing.
 
 </details>
 
-<details>
+<details markdown="1">
 <summary><strong>The output is too loud or too quiet</strong></summary>
 
 ### The output is too loud or too quiet
@@ -1302,7 +1302,7 @@ original loudness** keeps each song as it was.
 
 </details>
 
-<details>
+<details markdown="1">
 <summary><strong>The movement feels too strong</strong></summary>
 
 ### The movement feels too strong
@@ -1312,7 +1312,7 @@ and set **Movement: Gentle** and **Speed: Slow**.
 
 </details>
 
-<details>
+<details markdown="1">
 <summary><strong>A song asks for the singer add-on</strong></summary>
 
 ### A song asks for the singer add-on
@@ -1328,7 +1328,7 @@ and set **Movement: Gentle** and **Speed: Slow**.
 
 ## 📚 Reference
 
-<details>
+<details markdown="1">
 <summary><strong>Settings and defaults</strong></summary>
 
 ### Settings and defaults
@@ -1354,7 +1354,7 @@ and set **Movement: Gentle** and **Speed: Slow**.
 
 </details>
 
-<details>
+<details markdown="1">
 <summary><strong>Where Audio8D keeps things</strong></summary>
 
 ### Where Audio8D keeps things
@@ -1394,7 +1394,7 @@ about 5 dB of peak limiting, the song stays slightly under the target instead (*
 to the loudness as possible* changes that, though very loud or punchy songs can still land
 a little under it).
 
-<details>
+<details markdown="1">
 <summary><strong>How the sound was checked</strong></summary>
 
 The same 23 test files (tones, sweeps, silence, mono, 5.1, hot and clipped audio, DC
@@ -1410,7 +1410,7 @@ listening test.
 
 </details>
 
-<details>
+<details markdown="1">
 <summary><strong>Exact ranges, paths and engines</strong></summary>
 
 | Setting | Range | Option |
@@ -1436,7 +1436,7 @@ left-right, safe for speakers). **Beat sync** detects the tempo and rounds the c
 
 </details>
 
-<details>
+<details markdown="1">
 <summary><strong>Words used in this guide</strong></summary>
 
 ### Words used in this guide
@@ -1670,7 +1670,7 @@ install/repair/uninstall (with pip faked), temporary-preview cleanup, a check th
 window and the command line offer the same features, and a check that every `audio8d`
 command in this guide is valid.
 
-<details>
+<details markdown="1">
 <summary><strong>Layout of <code>src</code> (the <code>audio8d</code> package)</strong></summary>
 
 | Part | Holds |
@@ -1716,10 +1716,16 @@ in the `licenses` folder and listed in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTI
 Demucs and PyTorch are downloaded by the add-on under their own licences (MIT and
 BSD-3-Clause).
 
-<div align="center">
+<div align="center" markdown="1">
 
 **🎧 Put on your headphones and press play!**
 
 [⬆ Back to the top](#contents)
 
 </div>
+
+---
+
+## Documentation links
+
+[Read all Audio8D guides online](https://gcfernando.github.io/audio-8d/documentation/) · [Project overview](https://gcfernando.github.io/audio-8d/) · [All developer projects](https://gcfernando.github.io/gcfernando/projects/)
