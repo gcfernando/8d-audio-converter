@@ -26,7 +26,7 @@ defaults:
       path: "THIRD-PARTY-NOTICES.md"
     values:
       title: "Third-party software in Audio8D"
-      description: "Audio8D is developed by Gehan Fernando. The standalone app (Audio8D and audio8d-cli; Audio8D.exe and audio8d-cli.exe on Windows) ships with the following third-party software. Each keeps…"
+      description: "Audio8D bundled dependency versions, license texts and FFmpeg source links for the desktop and command-line audio converter."
 
 # Public documentation navigation and presentation.
 repository: gcfernando/audio-8d

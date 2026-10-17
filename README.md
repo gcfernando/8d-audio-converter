@@ -16,7 +16,7 @@
 <img src="https://img.shields.io/badge/python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.12 (included in the packages)"/>
 <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux-0078D4?style=for-the-badge" alt="Platform: Windows and Linux (macOS not tested)"/>
 <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-16A34A?style=for-the-badge" alt="Licence: MIT"/></a>
-<a href="tests"><img src="https://img.shields.io/badge/tests-source-FF4FD8?style=for-the-badge" alt="Browse the Audio8D test suite"/></a>
+<a href="https://github.com/gcfernando/audio-8d/tree/main/tests"><img src="https://img.shields.io/badge/tests-source-FF4FD8?style=for-the-badge" alt="Browse the Audio8D test suite"/></a>
 </p>
 <p>
 <img src="https://img.shields.io/badge/saves-MP3%20%7C%20FLAC%20%7C%20WAV%20%7C%20M4A%20%7C%20Opus-555?style=flat-square" alt="Saves MP3, FLAC, WAV, M4A and Opus"/>
