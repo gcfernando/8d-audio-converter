@@ -319,8 +319,16 @@ the window; previews open in your usual music player; replaced originals go to t
    FFprobe as ready.
 2. **The command line:** `--check` ends with **Everything required is ready.** (the
    singer add-on is optional) and shows where the log file is.
+
 3. **A test song:** use any song you have. Listen to a short preview first, then make the
    8D song. It is saved as `<song> (8D).mp3` next to the original.
+
+The system check runs FFmpeg/FFprobe version and capability probes and imports the
+optional singer packages. Its FFmpeg check includes the MP3 encoder and core filters;
+it does not test every output encoder or filter option. The window-package check looks
+for modules rather than opening a fresh GUI, and an installed singer package does not
+prove that its model weights are already downloaded. A short conversion in the intended
+format is the practical follow-up to a ready status.
 
 | System (terminal in the `Audio8D` folder) | Preview | Make the song |
 |---|---|---|
@@ -374,6 +382,12 @@ The end of a successful run looks like this:
 | Songs at once | How many songs are made at the same time | A good value for your computer (1–16) | Leave it |
 | Preview length | How long a preview plays | 30 s | 15–30 s |
 
+These are the application defaults (Studio plus the standard output settings).
+The lower-level Python `EffectConfig()` constructor keeps different defaults:
+Classic-like movement 0.85, room 0.30, variable MP3 quality 2, no loudness target
+and peak ceiling 0.95. Use `PRESETS["studio"].config` when embedding the application's
+starting sound in Python.
+
 </details>
 
 <details markdown="1">
@@ -390,9 +404,14 @@ The end of a successful run looks like this:
 | Previews (deleted automatically) | `%TEMP%\Audio8D previews` | the system temporary folder | the system temporary folder |
 
 Setting the environment variable `AUDIO8D_HOME` to a folder keeps all of these (except
-previews) there instead. `--check` shows the log file's exact place; **Clear remembered
-data** (`--clear-cache`) and **Delete saved log files** (`--delete-logs`) empty the
-cache and the logs.
+previews) there instead. On Linux, `XDG_CONFIG_HOME`, `XDG_CACHE_HOME` and
+`XDG_DATA_HOME` can also change the default locations. This covers Audio8D's own
+folders; pip's download cache and the add-on's model downloads follow their own tools'
+cache settings. Uninstalling the add-on removes its private environment, while
+**Clear remembered data** (`--clear-cache`) removes Audio8D's measurements and separated
+stems. Neither action promises to remove third-party download caches. `--check` shows
+the log file's exact place; **Delete saved log files** (`--delete-logs`) clears saved
+logs, and logging can immediately create a fresh log.
 
 </details>
 
@@ -408,9 +427,11 @@ using the cues ears use: the tiny time difference between the ears, the level di
 and the shadow of the head. A little reverb (*Space*) helps the sound feel outside your
 head. Then everything is mixed back, loudness is measured (EBU R 128) and set, peaks are
 limited, and the file is encoded: MP3 with LAME, M4A with FFmpeg's AAC encoder, Opus with
-libopus, FLAC and WAV as 24-bit. All the work is done in 32-bit floating point, the song
-is resampled at most once (only when the format or the effect needs another rate), and a
-lossy file is encoded only once. The tags (title, artist, album, …) are copied, including
+libopus, FLAC and WAV as 24-bit. The mix uses floating-point processing, with a
+double-precision subsonic filter. The source is converted to the chosen output rate
+when needed; internal timing bands and the oversampled limiter also resample, so the
+complete processing chain can contain several resampling steps. The final lossy
+output is encoded once. The tags (title, artist, album, …) are copied, including
 from Opus and Ogg files, and so is the album picture where the format can hold one.
 
 By default the peaks are protected: if reaching the loudness target would need more than
@@ -531,8 +552,9 @@ This takes about five minutes. The four steps down the left side are the whole j
    **Loudness** (*Match music apps*). Click **Next: create**.
 
 5. **Create.** Step 4 shows a short summary. Click the big **Create N songs** button (it
-   says how many). You see the progress and roughly how long is left; **Stop** stops after
-   the current step and keeps finished songs.
+   says how many). You see the progress and roughly how long is left; **Stop** requests
+   cancellation of active work and keeps finished songs. It can take a moment for a
+   running tool to stop.
 
    <p align="center">
      <img src="docs/images/create-summary.png" alt="Step 4 Create: a Summary card with Songs 12 songs (1 that can't be read will be skipped), Sound Studio, Output MP3 High quality, Loudness Match music apps, Folder, File names; a folded Every song in detail part; then notes such as Everything is ready." width="100%"/>
@@ -789,8 +811,9 @@ bring back detail a compressed source (such as a 128 kbps MP3) never had.
   <img src="docs/images/output-advanced.png" alt="More output options open for “Glass Clouds” only: Bitrate (kbps) Auto to 320 with 256 chosen, Get as close to the loudness as possible (off), Peak limit slider at -1.5 dB, Keep the album picture, Add (8D) to the song title, Use only part: from / to." width="100%"/>
 </p>
 
-**While creating** (folded, for all songs) holds **Check each finished song** (measures
-loudness and peaks; recommended on), **Songs at once** (1 to 16; a good value for your
+**While creating** (folded, for all songs) holds **Check each finished song** (attempts
+to measure loudness, true peaks and whole-file stereo correlation after saving;
+recommended on), **Songs at once** (1 to 16; a good value for your
 computer is already set) and **Play the first song when finished**.
 
 ### Loudness
@@ -808,7 +831,8 @@ crackles. **LUFS** is simply the unit for how loud music feels.
 
 On the command line, each result shows the finished file's measured loudness, marked
 *(checked)*, with a yellow note when a song lands more than 0.5 LU under the target. With
-`--no-check` nothing is measured afterwards, so it says what the song *aims for*.
+`--no-check`, or if the final check fails or is cancelled, there is no finished-file
+measurement, so the loudness line says what the song *aims for*.
 
 ### Create your songs
 
@@ -819,7 +843,9 @@ fixed first (red) or is worth knowing (yellow). When everything is fine you see
 
 Click **Create N songs**. While it works, the bar shows *4 of 12 done · now: Nocturne in
 Blue · about 0:21 left*, and each song's row says what it is doing, then **Done**. **Stop**
-stops after the current step; finished songs are kept and the unfinished one is cleaned up.
+requests cancellation of active tools; finished songs are kept, and cleanup of the
+unfinished work is attempted. Closing waits up to five seconds for the conversion
+worker to tidy up, so a forced exit or a locked file can leave temporary files.
 **Esc** asks first (*Stop creating?* → **Stop** or **Keep working**). You can keep using
 the window.
 
@@ -858,7 +884,9 @@ voice moves only a little and stays close to the middle.
 
 Audio8D makes its **own add-on folder** and downloads Demucs and PyTorch into it, using a
 Python that is already on your computer (3.10 or newer; on Windows use 64-bit Python).
-**Nothing else is changed**: not your Python, not your other programs.
+The packages are installed into that private environment rather than your existing
+Python. pip may also populate its download cache, and Demucs can download model weights
+when separation first runs; those caches are separate from the add-on folder.
 
 > [!WARNING]
 > - **Download size:** about **1 GB on Windows**; on Linux PyTorch can be **several GB**.
@@ -872,14 +900,20 @@ Python that is already on your computer (3.10 or newer; on Windows use 64-bit Py
 #### How do I install it?
 
 **Window:** **Settings** → the **Add-on** card → read the four boxes → **Install add-on** →
-confirm. You can keep using Audio8D while it installs; **Stop** cancels it, and nothing
-half-installed is kept. If no Python is found, the card says how to get one.
+confirm. You can keep using Audio8D while it installs; **Stop** requests cancellation.
+A failed fresh install attempts to remove its new folder. An install into an existing
+partial folder can leave that folder in place, and locked files can prevent cleanup.
+Use **Repair (reinstall)** after a failed attempt if the status says *Needs repair*.
+If no Python is found, the card says how to get one.
 
-The card shows each step and, where it can be measured, a real percentage, for example
+The card shows each step and, where totals are available, an estimated overall
+percentage, for example
 *Downloading packages — 42% · torch-….whl (12 of 31)* (files downloaded). Steps that can't
 be measured show a moving bar with no number. **100%** appears only when it really worked
-(*Installed successfully — 100%*); a failed or stopped install says where it stopped, for
-example *(stopped at 42%)*. **Show details** lists pip's own output.
+(*Installed successfully — 100%*). The bar assigns fixed shares to stages and uses
+package-file counts plus the current file's downloaded bytes; it is not the percentage
+of elapsed time or total download bytes. A failed or stopped install says where it
+stopped, for example *(stopped at 42%)*. **Show details** lists pip's own output.
 
 <p align="center">
   <img src="docs/images/addon-progress.png" alt="The Add-on card while installing: an Installing badge, a Stop button, the progress bar at 42% and 'Downloading packages — 42% · torch (12 of 31)', with Show details under it." width="100%"/>
@@ -1114,9 +1148,10 @@ audio8d "C:\Music" --dry-run
 audio8d "C:\Music" --suggest
 ```
 
-`--dry-run` shows the settings and where each new song would be saved, then stops without
-making anything. `--suggest` shows the style that suits each song best (from its tags),
-then stops.
+`--dry-run` shows the settings and planned output names without converting songs.
+It still resolves inputs, may probe metadata or check the singer add-on, and starts
+normal logging. `--suggest` uses tags, names, recording properties and any available
+mood hints to rank styles; it does not listen to or classify the audio signal.
 
 ### Choose the sound
 
@@ -1342,6 +1377,25 @@ flowchart TD
 
 The details are in [How the sound is made](#how-the-sound-is-made).
 
+The interfaces share `song_settings.py` for per-song overrides and `pipeline.py` for
+conversion. The GUI keeps drafts and defaults in `gui_model.py`, delegates work through
+the `app_*.py` mixins, and receives worker updates through a queue; `cli.py` and
+`options.py` provide the terminal entry points. Output is written beside its destination
+under a hidden temporary name and then published. With in-place replacement, the
+completed temporary file exists before the original is moved; if publication then
+fails, the error names the retained temporary file.
+
+The final check happens **after publication**. A failed or cancelled check can leave a
+saved song with no quality report; it does not roll back that song. A measured
+`mono-safe` result means the whole-file correlation is nonnegative, and `peak_safe`
+uses a true-peak threshold of -0.1 dBTP. These are summary checks, not a guarantee
+against cancellation in every passage or audible distortion.
+
+Measurement reuse is keyed by source path, size and modification time, mix settings,
+trim, timeline and sample rate, rather than by a hash of the audio contents. Singer
+separation has its own cache; its loudness measurement is not reused. Clear remembered
+data if a source was replaced while its size and timestamp stayed the same.
+
 ---
 
 <a id="-running-from-source"></a>
@@ -1460,14 +1514,24 @@ On Linux and macOS write `python3`. On Windows,
    it downloads the osxexperts.net Apple Silicon build (evermeet.cx on Intel; macOS
    downloads not verified). An older FFmpeg is refused. `--ffmpeg-dir FOLDER` uses your own
    `ffmpeg` and `ffprobe` (7+) instead.
-3. Builds the programs from `packaging/audio8d.spec`, adds the README, licences and
-   `HOW TO RUN.txt`, and writes **`bin/Audio8D-<version>-<system>-<processor>.zip`**,
+3. Builds the programs from `packaging/audio8d.spec`, adds the README,
+   `THIRD-PARTY-NOTICES.md`, the `licenses/` directory and `HOW TO RUN.txt`, and writes
+   **`bin/Audio8D-<version>-<system>-<processor>.zip`**,
    keeping the "may run" marks.
 4. **Tests the package:** unpacks it to a folder with spaces in its name, runs `--version`
    and `--check` with no Python on the PATH, and converts a generated test tone.
    `--skip-check` skips this. Any failure stops with *Build failed: …* and says why.
 
-Temporary files stay in `build/` (not stored in git).
+Build environments and staged output stay in `build/` (not stored in git); archive
+self-checks also use a system temporary directory. The script upgrades pip and installs
+dependencies on each build, so a cached environment does not guarantee an offline build.
+The tracked ZIPs are existing build artifacts and are not regenerated when source or
+documentation changes.
+
+The build's extra-file list and both tracked ZIP listings omit the repository's root
+`LICENSE`. Before distributing a new package, include that first-party MIT notice
+alongside the third-party notices. This documentation review does not rebuild or alter
+the archives.
 
 **What `bin` contains** (only the release packages, stored with Git LFS):
 
@@ -1500,6 +1564,21 @@ python -m pyright src tests
 The suite covers the real window, the command line, the add-on
 install/repair/uninstall (with pip faked), temporary-preview cleanup, a check that the
 window and the command line offer the same features, and checks that every `audio8d` command in this guide is accepted by the parser.
+
+For a focused check of documentation examples without real audio conversion:
+
+```powershell
+python -m pytest tests/unit/test_readme_commands.py
+```
+
+Most option/settings/style tests use fake files or mocked tools. Audio fixtures and
+some tests under `tests/unit/` also launch real FFmpeg, and integration window tests
+need CustomTkinter, Tk and a display. The 300-song GUI test checks reading and bulk
+customization; separate tests exercise conversion, so it is not a 300-song conversion
+benchmark. Existing measurement and platform reports above describe earlier work;
+their raw audit files are not part of this checkout and were not rerun for this
+documentation review.
+
 Use `python -m pytest --collect-only -q` for the current test inventory; counts vary
 with the checkout and available optional dependencies.
 
@@ -1717,11 +1796,21 @@ and set **Movement: Gentle** and **Speed: Slow**.
   path, so relabelling a style as 16D would be misleading.
 - **Previewing a style** (Change style, or Edit on Your styles) uses the all-songs output
   settings; a song's own output settings are used when the song is created.
+- **Long saved-style names:** the GUI's suggested duplicate name appends a
+  suffix before validating its 40-character limit. With a name near that limit this
+  can keep searching indefinitely. Use the CLI with an explicit shorter destination
+  name, or shorten the style's name before duplicating it in the window.
 - **Styles saved long ago "based on hifi"** load with Gentle's movement and room; open them
   with **Edit** and adjust if they sound different.
 
 **Sound**
 
+- **The head model is approximate**, using fixed timing/level/shadow cues rather than
+  a listener-specific HRTF or head tracking. The perceived direction and height vary
+  with headphones, recording and listener.
+- **Previews approximate final-song loudness.** They measure a short section, adjust a
+  fixed target using its estimated lift, and shorten easing. A WAV preview also does
+  not include the final lossy encoder's artifacts; use a saved output to judge those.
 - **No formal listening test** was done; the sound was checked by measurement (see
   [How the sound is made](#how-the-sound-is-made)).
 - **A partly damaged MP3 converts without a warning.** MP3 players skip damaged parts, and

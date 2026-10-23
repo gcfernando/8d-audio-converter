@@ -34,6 +34,18 @@ The README is the application's full user guide, also linked from its Help actio
 
 ## 🌐 Published documentation
 
-This index is also rendered by the repository's GitHub Pages site. Relative links above point to the authored repository documents; package READMEs target NuGet readers and may use absolute GitHub links.
+This index is also rendered by the repository's GitHub Pages site. Relative links above point to the authored repository documents. The standalone ZIPs
+contain a README snapshot from their build; source documentation changes do not update
+those archives. The app's **Open the full guide** action opens the online README.
+
+## 🧪 Reading and verification boundaries
+
+The [processing guide](README.md#how-it-works) explains publication before the optional
+quality check, cache identity and shared GUI/CLI settings. The [build guide](README.md#building-the-packages)
+records the current archive contents and the missing first-party license notice.
+The [known limitations](README.md#known-limitations) distinguish approximate spatial
+and preview behavior from measured output. For a focused, conversion-free check of
+CLI examples, run `python -m pytest tests/unit/test_readme_commands.py` from the
+repository after installing the development dependencies.
 
 [Repository](https://github.com/gcfernando/audio-8d) · [Project overview](README.md)
