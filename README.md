@@ -184,6 +184,8 @@ the sound of MP4/WEBM videos.
 
 <a id="quick-start"></a>
 
+<a id="‍-running-from-source"></a>
+
 ## 🚀 Quick start
 
 1. **Choose the package for your computer:**
@@ -1533,6 +1535,8 @@ and are stopped when cancelled or when the window closes.
 <a id="-troubleshooting"></a>
 
 <a id="troubleshooting"></a>
+
+<a id="️-troubleshooting"></a>
 
 ## 🛠️ Troubleshooting and limitations
 

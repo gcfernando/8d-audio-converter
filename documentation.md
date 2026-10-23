@@ -9,6 +9,10 @@ permalink: /documentation/
 
 Find the GUI walkthrough, CLI examples, audio-processing details and packaging instructions for the Python/FFmpeg 8D audio converter.
 
+<a id="explore-more"></a>
+<a id="markdown-source-library"></a>
+<a id="read-online"></a>
+
 ## 🧭 Choose a guide
 
 | Task | Guide |
