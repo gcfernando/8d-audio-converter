@@ -5,32 +5,31 @@ description: "FFmpeg-based 8D audio converter for Windows and Linux, with deskto
 permalink: /documentation/
 ---
 
-Browse the published guides, examples and reference pages for **Audio8D**. Each guide has a readable web page; the Markdown sources remain available on GitHub.
+# Audio8D Documentation
 
-## Read online
+Find the GUI walkthrough, CLI examples, audio-processing details and packaging instructions for the Python/FFmpeg 8D audio converter.
 
-<table>
-<thead><tr><th>Guide</th><th>Markdown or HTML source</th></tr></thead>
-<tbody>
-{% assign guides = site.html_pages | sort: 'url' %}
-{% for guide in guides %}{% if guide.sitemap != false and guide.url != page.url and guide.url != '/404.html' %}
-<tr><td><a href="{{ guide.url | absolute_url }}">{{ guide.title | default: guide.name | escape }}</a></td><td><a href="https://github.com/{{ site.repository }}/blob/main/{{ guide.path | uri_escape }}">View source</a></td></tr>
-{% endif %}{% endfor %}
-{% for guide in site.static_files %}{% if guide.extname == '.html' and guide.sitemap != false %}
-<tr><td><a href="{{ guide.path | replace: '/index.html', '/' | absolute_url }}">{% if guide.path == '/Linux_Commands/index.html' %}Linux Command Reference{% elsif guide.path contains 'ai_coding_plugins_beginners_guide' %}AI Coding Add-ons: Beginner’s Guide{% else %}{{ guide.name | escape }} — {{ guide.path | escape }}{% endif %}</a></td><td><a href="https://github.com/{{ site.repository }}/blob/main{{ guide.path | uri_escape }}">View HTML source</a></td></tr>
-{% endif %}{% endfor %}
-</tbody>
-</table>
+## 🧭 Choose a guide
 
-## Markdown source library
+| Task | Guide |
+|---|---|
+| Download and check a package | [Quick start](README.md#quick-start) and [system checks](README.md#check-that-it-works) |
+| Convert a first song in the GUI | [Window walkthrough](README.md#your-first-song-the-window) |
+| Automate batches and per-song settings | [Command-line reference](README.md#command-line) |
+| Tune styles, loudness and local storage | [Configuration and reference](README.md#reference) |
+| Understand the conversion stages | [Processing architecture](README.md#how-it-works) |
+| Develop or build portable packages | [Source setup](README.md#running-from-source), [packaging](README.md#building-the-packages) and [tests](README.md#tests-and-project-layout) |
+| Diagnose platform or audio limitations | [Troubleshooting](README.md#troubleshooting) and [known limitations](README.md#known-limitations) |
+| Review bundled-software licensing | [Third-party notices](THIRD-PARTY-NOTICES.md) and [MIT license](LICENSE) |
 
-[View this documentation index source](https://github.com/{{ site.repository }}/blob/main/documentation.md). These are the authored Markdown files. Some are package-specific documents or alternate source formats of the same guide.
+## 🔗 Source references
 
-{% assign sources = site.static_files | sort: 'path' %}
-{% for source in sources %}{% if source.extname == '.md' %}
-- [{{ source.path | escape }}](https://github.com/{{ site.repository }}/blob/main{{ source.path | uri_escape }})
-{% endif %}{% endfor %}
+[Package metadata and optional dependencies](pyproject.toml) · [Pipeline implementation](src/pipeline.py) · [CLI option definitions](src/options.py) · [Build entry point](packaging/build_release.py)
 
-## Explore more
+The README is the application's full user guide, also linked from its Help action. This index routes readers to that guide rather than maintaining a second copy of CLI options.
 
-[All developer projects](https://gcfernando.github.io/gcfernando/projects/) · [Repository on GitHub](https://github.com/gcfernando/audio-8d) · [XML sitemap](https://gcfernando.github.io/audio-8d/sitemap.xml)
+## 🌐 Published documentation
+
+This index is also rendered by the repository's GitHub Pages site. Relative links above point to the authored repository documents; package READMEs target NuGet readers and may use absolute GitHub links.
+
+[Repository](https://github.com/gcfernando/audio-8d) · [Project overview](README.md)

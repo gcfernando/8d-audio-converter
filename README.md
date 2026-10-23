@@ -31,13 +31,15 @@
 
 </div>
 
+## 🔎 Overview
+
 **Audio8D turns normal music into a moving 3D headphone experience.** Add a song,
 choose how you want it to sound, listen to a preview, and create the new audio file.
 People call this effect **"8D audio"**: the music seems to travel past one ear, behind
 you, past the other ear and back.
 
 - 🛡️ **Your songs are safe.** Audio8D always makes a **new** file. Your original song is
-  not changed (unless you ask it to replace the original).
+  not changed (unless you explicitly choose replacement).
 - 📦 **Nothing else to install.** The ready-made packages include everything Audio8D
   needs, including Python and FFmpeg (the sound program that does the work).
 - 🔁 **There is a window and a command line.** Both do the same job, with the same
@@ -47,9 +49,7 @@ you, past the other ear and back.
 > 🎧 **Use headphones or earbuds.** The effect works because each ear hears something
 > a little different. On speakers it sounds much weaker (the **Speakers** style helps).
 
-<p align="center">
-  <img src="docs/images/choose-sound.png" alt="Audio8D's step 2, Choose how it sounds: the Sound style card shows Studio with Change style and Customize default buttons; below it Your songs with the buttons Preview, Compare A/B, Customize, Reset to default and Use suggested styles, and the list of songs with Song, Sound, Settings (Default) and Actions (Preview, Customize) columns." width="100%"/>
-</p>
+
 
 ---
 
@@ -94,9 +94,11 @@ you, past the other ear and back.
 
 ---
 
+<a id="-what-audio8d-does"></a>
+
 <a id="what-audio8d-does"></a>
 
-## ✨ What Audio8D does
+## ✨ Features
 
 <table>
 <tr>
@@ -175,39 +177,10 @@ the sound of MP4/WEBM videos.
 
 ---
 
-<a id="how-it-works"></a>
 
-## 🔄 How it works
-
-**Your journey** is four steps, in the window or on the command line:
-
-```mermaid
-flowchart LR
-    A["🎵 1 · Add music<br/>songs or folders"] --> B["🎚️ 2 · Choose sound<br/>style, Customize, Preview"]
-    B --> C["💾 3 · Output<br/>where, format, loudness"]
-    C --> D["✅ 4 · Create<br/>new '(8D)' files"]
-```
-
-**Inside, each song** goes through these stages (from `src/pipeline.py`):
-
-```mermaid
-flowchart TD
-    S["Read the song<br/>(FFprobe: format, length, channels)"] --> V{"Keep the singer<br/>in the middle?"}
-    V -- "yes (add-on)" --> X["Separate the voice<br/>from the music (Demucs)"]
-    V -- no --> M
-    X --> M["Make the 3D mix<br/>(movement, bass, room)"]
-    M --> L{"Loudness goal?"}
-    L -- yes --> Q["Measure the loudness<br/>(or reuse a remembered measurement)"]
-    Q --> G["Set the volume once<br/>and limit the peaks"]
-    L -- "no change" --> E
-    G --> E["Encode into a temporary file"]
-    E --> P["Move it into place<br/>(original to the Recycle Bin / Trash only if replacing)"]
-    P --> C["Check the result<br/>(loudness, peaks, mono-safety)"]
-```
-
-The details are in [How the sound is made](#how-the-sound-is-made).
-
----
+<p align="center">
+  <img src="docs/images/choose-sound.png" alt="Audio8D's step 2, Choose how it sounds: the Sound style card shows Studio with Change style and Customize default buttons; below it Your songs with the buttons Preview, Compare A/B, Customize, Reset to default and Use suggested styles, and the list of songs with Song, Sound, Settings (Default) and Actions (Preview, Customize) columns." width="100%"/>
+</p>
 
 <a id="quick-start"></a>
 
@@ -249,6 +222,10 @@ The details are in [How the sound is made](#how-the-sound-is-made).
 > Keep the folder together; you can put it anywhere, including a path with spaces.
 
 ---
+
+## 📦 Prerequisites and installation
+
+Choose a bundled package for a supported system, or follow [Running from source](#running-from-source) for Python 3.10+, Tk and FFmpeg 7+. The package and source paths have different requirements; keep the bundled application folder intact.
 
 <a id="windows"></a>
 
@@ -364,6 +341,154 @@ The end of a successful run looks like this:
 > (*Nothing new to create*). Add `--overwrite` to make it again.
 
 ---
+
+<a id="-reference"></a>
+
+<a id="reference"></a>
+
+## ⚙️ Configuration and reference
+
+<details markdown="1">
+<summary><strong>Settings and defaults</strong></summary>
+
+### Settings and defaults
+
+| Setting | What it changes | Default | Simple recommendation |
+|---|---|---|---|
+| Style | The whole sound, as a ready-made set | Studio | Studio; Gentle for acoustic music |
+| Movement | How far the music travels around you | Balanced (0.80) | Balanced; Gentle for calm music |
+| Speed | How quickly it goes around | Normal (8 s per circle) | Normal; faster than 5 s can make some people dizzy |
+| Space | How big the room sounds | Natural (0.25) | Natural; Dry for voices |
+| Keep bass centered | The bass (below 120 Hz) stays in the middle | On | On |
+| Height | Lets the sound float above ear level | 0 (ear level) | 0 |
+| Ease in and out | The movement grows in at the start and settles at the end | 3 s | 3 s |
+| Spin in time with the beat | Each circle lasts whole bars of music | Off (on in Groove) | On for dance and pop |
+| Keep the singer in the middle | The voice moves only a little and stays close to the middle | Off | On for songs with vocals (needs the add-on) |
+| Output format | The kind of file | MP3 | MP3; FLAC to keep every detail of the 8D mix |
+| Quality | How much detail a compressed file keeps | High | High |
+| Loudness | How loud the new song is | Match music apps (-14 LUFS) | Match music apps |
+| Get as close to the loudness as possible | Shaves the loudest peaks to get as close to the level as possible (very loud songs can still land a little under it) | Off | Off |
+| Peak limit | The loudest a peak may get | -1.5 dB (MP3, M4A, Opus), -1.0 dB (FLAC, WAV) | Leave it |
+| Songs at once | How many songs are made at the same time | A good value for your computer (1–16) | Leave it |
+| Preview length | How long a preview plays | 30 s | 15–30 s |
+
+</details>
+
+<details markdown="1">
+<summary><strong>Where Audio8D keeps things</strong></summary>
+
+### Where Audio8D keeps things
+
+| What | Windows | macOS | Linux |
+|---|---|---|---|
+| Settings (`settings.json`) and your styles (`presets.toml`) | `%APPDATA%\Audio8D` | `~/Library/Application Support/Audio8D` | `~/.config/audio8d` |
+| Log (`audio8d.log`) | `%LOCALAPPDATA%\Audio8D\logs` | `~/Library/Application Support/Audio8D/logs` | `~/.config/audio8d/logs` |
+| Remembered measurements, separated vocals | `%LOCALAPPDATA%\Audio8D\cache` | `~/Library/Caches/Audio8D` | `~/.cache/audio8d` |
+| The singer add-on | `%LOCALAPPDATA%\Audio8D\addon` | `~/Library/Application Support/Audio8D/addon` | `~/.local/share/audio8d/addon` |
+| Previews (deleted automatically) | `%TEMP%\Audio8D previews` | the system temporary folder | the system temporary folder |
+
+Setting the environment variable `AUDIO8D_HOME` to a folder keeps all of these (except
+previews) there instead. `--check` shows the log file's exact place; **Clear remembered
+data** (`--clear-cache`) and **Delete saved log files** (`--delete-logs`) empty the
+cache and the logs.
+
+</details>
+
+<a id="how-the-sound-is-made"></a>
+
+### How the sound is made
+
+First, a gentle filter below 5 Hz removes any DC offset and inaudible rumble, which would
+otherwise use up headroom (it changes nothing you can hear). A mono song is copied to both
+ears at its full level. Audio8D then splits the song into bass and the rest (at 120 Hz by
+default, so the bass stays centered). The rest is moved along a path around your head
+using the cues ears use: the tiny time difference between the ears, the level difference,
+and the shadow of the head. A little reverb (*Space*) helps the sound feel outside your
+head. Then everything is mixed back, loudness is measured (EBU R 128) and set, peaks are
+limited, and the file is encoded: MP3 with LAME, M4A with FFmpeg's AAC encoder, Opus with
+libopus, FLAC and WAV as 24-bit. All the work is done in 32-bit floating point, the song
+is resampled at most once (only when the format or the effect needs another rate), and a
+lossy file is encoded only once. The tags (title, artist, album, …) are copied, including
+from Opus and Ogg files, and so is the album picture where the format can hold one.
+
+By default the peaks are protected: if reaching the loudness target would need more than
+about 5 dB of peak limiting, the song stays slightly under the target instead (*Get as close
+to the loudness as possible* changes that, though very loud or punchy songs can still land
+a little under it).
+
+<details markdown="1">
+<summary><strong>How the sound was checked</strong></summary>
+
+The same 23 test files (tones, sweeps, silence, mono, 5.1, hot and clipped audio, DC
+offset, lossy and hi-res sources, tagged files and a real song) were converted to all five
+formats by the old and the new code and measured by the same script: loudness, true peak,
+clipping, DC offset, spectrum, stereo width and correlation, channel order, distortion,
+metadata and decoding errors. A long file name, a damaged MP3 and a file that isn't music
+were tried on the command line. The new code removed the DC offset (0.37–0.42 → 0.0001),
+let those files reach -14 LUFS, raised mono songs by the 3 dB they had lost, and kept the
+tags from Opus files. No new file clipped or failed to decode, and a real song changed by
+less than 0.1 dB in loudness and width. Nobody listened to the results as a formal
+listening test.
+
+</details>
+
+<details markdown="1">
+<summary><strong>Exact ranges, paths and engines</strong></summary>
+
+| Setting | Range | Option |
+|---|---|---|
+| Movement (intensity) | 0 – 1 | `--intensity` |
+| Seconds per circle | 2 – 100 | `--rotation-seconds` |
+| Room (ambience) | 0 – 1 | `--ambience` |
+| Bass crossover | 40 – 250 Hz, or off | `--bass` |
+| Height (elevation) | 0 – 1 | `--elevation` |
+| Ease in and out | 0 – 30 s | `--fade` |
+| Tempo | 40 – 240 BPM, or off | `--bpm` |
+| Loudness target | -30 – -5 LUFS | `--loudness` |
+| Peak limit | 0.0625 – 1 (about -24 to 0 dB; the window shows dB) | `--limiter-ceiling` |
+| MP3 variable quality | 0 (best) – 9 | `--quality` |
+| Bitrate | 128, 160, 192, 224, 256, 320 kbps | `--bitrate` |
+| Preview length | 5 – 120 s (window: 15, 30, 45 or 60 s) | `--preview` |
+| Songs at once | 1 – 16 | `--jobs` |
+
+**Paths:** *circle* (all the way round), *arc* (side to side in front), *figure8* (loops
+around each ear), *wander* (drifts). **Engine:** *3d* (the cues above) or *pan* (simple
+left-right, safe for speakers). **Beat sync** detects the tempo and rounds the circle to
+2, 4, 8, 16 or 32 beats.
+
+</details>
+
+<details markdown="1">
+<summary><strong>Words used in this guide</strong></summary>
+
+### Words used in this guide
+
+| Word | Meaning |
+|---|---|
+| **8D audio** | Music that seems to move around your head when you use headphones. |
+| **Style** | A ready-made group of sound settings. |
+| **Default** / **Custom** | The settings every song uses / settings that belong to one song. |
+| **Customize** | Change the settings of one song (or the default). |
+| **Preview** | A temporary listen that does not create the final file. |
+| **Compare A/B** | A temporary listen to the original, then the 8D version. |
+| **Create** | Make and save the new 8D files. |
+| **Output** | How the new file is saved: format, quality, loudness, folder. |
+| **Bitrate** | A quality/size setting for compressed audio such as MP3. |
+| **Lossless** | Audio saved without throwing any sound data away (FLAC, WAV). |
+| **LUFS** | The unit for how loud music feels; music apps use about -14. |
+| **Add-on** | An optional extra part you can install and remove. |
+| **FFmpeg** | The sound program Audio8D uses to do the work. |
+| **Terminal** | A window where you type commands instead of clicking. |
+| **Git / Git LFS** | The tool that downloads the source code / its add-on for large files. |
+| **venv** | A private Python environment just for Audio8D, in the `.venv` folder. |
+
+</details>
+
+---
+
+## 💡 Usage
+
+Use the window walkthrough for interactive conversion or the command-line reference for scripts. Both share the conversion pipeline and support per-song settings.
 
 <a id="your-first-song-the-window"></a>
 
@@ -1181,9 +1306,235 @@ styles above, also set how the file is saved).
 
 ---
 
+<a id="-how-it-works"></a>
+
+<a id="how-it-works"></a>
+
+## 🏗️ Architecture and processing
+
+**Your journey** is four steps, in the window or on the command line:
+
+```mermaid
+flowchart LR
+    A["🎵 1 · Add music<br/>songs or folders"] --> B["🎚️ 2 · Choose sound<br/>style, Customize, Preview"]
+    B --> C["💾 3 · Output<br/>where, format, loudness"]
+    C --> D["✅ 4 · Create<br/>new '(8D)' files"]
+```
+
+**Inside, each song** goes through these stages (from `src/pipeline.py`):
+
+```mermaid
+flowchart TD
+    S["Read the song<br/>(FFprobe: format, length, channels)"] --> V{"Keep the singer<br/>in the middle?"}
+    V -- "yes (add-on)" --> X["Separate the voice<br/>from the music (Demucs)"]
+    V -- no --> M
+    X --> M["Make the 3D mix<br/>(movement, bass, room)"]
+    M --> L{"Loudness goal?"}
+    L -- yes --> Q["Measure the loudness<br/>(or reuse a remembered measurement)"]
+    Q --> G["Set the volume once<br/>and limit the peaks"]
+    L -- "no change" --> E
+    G --> E["Encode into a temporary file"]
+    E --> P["Move it into place<br/>(original to the Recycle Bin / Trash only if replacing)"]
+    P --> C["Check the result<br/>(loudness, peaks, mono-safety)"]
+```
+
+The details are in [How the sound is made](#how-the-sound-is-made).
+
+---
+
+<a id="-running-from-source"></a>
+
+<a id="running-from-source"></a>
+
+## 🧪 Development and testing
+
+*This part is for developers. Normal users should use a package (see
+[Quick start](#quick-start)).*
+
+**You need:**
+
+| Software | Windows | Linux | macOS (not tested) |
+|---|---|---|---|
+| **Python 3.10 or newer**, with Tk | [python.org](https://www.python.org/downloads/) (tick *Add python.exe to PATH*) | `sudo apt install python3 python3-venv python3-pip python3-tk` | `brew install python@3.13 python-tk@3.13` |
+| **Git** | [Git for Windows](https://git-scm.com/download/win) plus [Git LFS](https://git-lfs.com) (check `git lfs version`) | `sudo apt install git` | `brew install git` |
+| **FFmpeg 7.0 or newer** | Included in the repository: `vendor\ffmpeg\windows-x86_64` (Git LFS) | Install it yourself (below) | `brew install ffmpeg` (check `ffmpeg -version`) |
+| **CustomTkinter, Pillow** | `pip` (below) | `pip` (below) | `pip` (below) |
+
+**Get the code and run it (Windows):**
+
+```powershell
+git lfs install
+git clone https://github.com/gcfernando/audio-8d.git
+cd audio-8d
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install customtkinter pillow
+python src\__main__.py --check
+python src\__main__.py --gui
+```
+
+- `vendor\ffmpeg\windows-x86_64\ffmpeg.exe` must be about 105 MB. If it is only a few
+  hundred bytes, Git LFS was missing: install it and run `git lfs pull`.
+- If PowerShell blocks `Activate.ps1`, keep the isolated environment and call its
+  Python directly: `.\.venv\Scripts\python.exe -m pip install customtkinter pillow`,
+  then `.\.venv\Scripts\python.exe src\__main__.py --check` or `--gui`. Activation
+  is optional; changing the persistent execution policy is unnecessary.
+- Double-clicking `Audio8D.pyw` also opens the window, using your normal Python (not the
+  venv), so the two packages must be installed there too.
+
+**Get the code and run it (Linux or macOS):**
+
+```bash
+git clone https://github.com/gcfernando/audio-8d.git
+cd audio-8d
+python3 -m venv .venv
+. .venv/bin/activate
+python -m pip install customtkinter pillow
+python src/__main__.py --check
+python src/__main__.py --gui
+```
+
+Git LFS is not needed on Linux or macOS. On macOS use `python3.13 -m venv .venv`.
+
+> [!WARNING]
+> **FFmpeg 7 on Linux.** Ubuntu's own `ffmpeg` package is too old (22.04 has 4.4, 24.04
+> has 6.1): `--check` passes but songs with any room sound fail (FFmpeg's own words are
+> *Option 'irnorm' not found*; Audio8D says *Your FFmpeg is older than version 7*).
+
+A tested fix for 64-bit x86 is the static build:
+
+```bash
+curl -LO https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz
+mkdir ffmpeg-static
+tar -xf ffmpeg-release-amd64-static.tar.xz -C ffmpeg-static --strip-components=1
+sudo install -m 755 ffmpeg-static/ffmpeg ffmpeg-static/ffprobe /usr/local/bin/
+ffmpeg -version
+```
+
+**Install as commands, with the developer tools:**
+
+```powershell
+python -m pip install -e ".[gui,dev]"
+```
+
+This adds the commands `audio8d` and `audio8d-gui`, plus pytest, ruff, pylint and pyright.
+An editable install (`-e`) finds FFmpeg like running from source. A normal
+(non-editable) install doesn't: put FFmpeg on your PATH, choose it in **Settings**, or use
+`--ffmpeg PATH --ffprobe PATH`. Install the singer add-on from **Settings** (the `stems`
+extra exists but is not needed).
+
+---
+
+<a id="building-the-packages"></a>
+
+## 📦 Building the packages
+
+Each package is built **on its own system**: PyInstaller can't build for another system.
+From the repository folder (`audio-8d`):
+
+```powershell
+python packaging/build_release.py
+```
+
+On Linux and macOS write `python3`. On Windows,
+`powershell -ExecutionPolicy Bypass -File packaging\build.ps1` does the same (it calls
+`build_release.py`; the old `-Zip` switch is accepted but no longer needed).
+
+**Build requirements:**
+
+| | Windows | Linux | macOS |
+|---|---|---|---|
+| Python 3.10+ with Tk | python.org | `sudo apt install python3 python3-venv python3-tk` | Homebrew (as above) |
+| Git | with Git LFS (for `vendor\ffmpeg`) | yes | yes |
+| Internet | first build (packages) | first build (packages and FFmpeg) | first build (packages and FFmpeg) |
+
+**What it does:**
+
+1. Makes its own environment in `build/venv-<system>` and installs Audio8D with its window
+   packages and PyInstaller, at the exact versions pinned in
+   `packaging/requirements-build.txt` (the same versions `THIRD-PARTY-NOTICES.md` lists).
+2. Gets FFmpeg 7 or newer: on Windows from `vendor/ffmpeg/windows-x86_64`; on Linux x86_64
+   it downloads the johnvansickle.com static build and checks its published MD5; on macOS
+   it downloads the osxexperts.net Apple Silicon build (evermeet.cx on Intel; macOS
+   downloads not verified). An older FFmpeg is refused. `--ffmpeg-dir FOLDER` uses your own
+   `ffmpeg` and `ffprobe` (7+) instead.
+3. Builds the programs from `packaging/audio8d.spec`, adds the README, licences and
+   `HOW TO RUN.txt`, and writes **`bin/Audio8D-<version>-<system>-<processor>.zip`**,
+   keeping the "may run" marks.
+4. **Tests the package:** unpacks it to a folder with spaces in its name, runs `--version`
+   and `--check` with no Python on the PATH, and converts a generated test tone.
+   `--skip-check` skips this. Any failure stops with *Build failed: …* and says why.
+
+Temporary files stay in `build/` (not stored in git).
+
+**What `bin` contains** (only the release packages, stored with Git LFS):
+
+```text
+bin/
+  Audio8D-1.0.0-windows-x86_64.zip
+  Audio8D-1.0.0-linux-x86_64.zip
+  Audio8D-1.0.0-macos-arm64.zip     (after a build on a Mac)
+```
+
+> [!NOTE]
+> There is no CI workflow yet; build each package on its own system.
+
+---
+
+<a id="tests-and-project-layout"></a>
+
+## 🧪 Tests and project layout
+
+**Tests and checks** (from the repository folder, after `pip install -e ".[gui,dev]"`):
+
+```powershell
+python -m pytest                        # all tests (window tests need a screen)
+python -m ruff check .
+python -m ruff format --check .
+python -m pylint src tests packaging/build_release.py
+python -m pyright src tests
+```
+
+The suite covers the real window, the command line, the add-on
+install/repair/uninstall (with pip faked), temporary-preview cleanup, a check that the
+window and the command line offer the same features, and checks that every `audio8d` command in this guide is accepted by the parser.
+Use `python -m pytest --collect-only -q` for the current test inventory; counts vary
+with the checkout and available optional dependencies.
+
+<details markdown="1">
+<summary><strong>Layout of <code>src</code> (the <code>audio8d</code> package)</strong></summary>
+
+| Part | Holds |
+|---|---|
+| `pipeline.py`, `batch.py`, `effects/`, `analysis/`, `ffmpeg/`, `files/` | The conversion, shared by the window and the command line |
+| `core/presets.py`, `core/sound_levels.py`, `core/style_guide.py` | The styles (sound only), the standard output, the Movement/Speed/Space words |
+| `core/locations.py` | Where settings, logs and the bundled FFmpeg are found |
+| `song_settings.py`, `per_song.py` | How a song's own settings combine with the defaults (window and `--per-song`) |
+| `gui_model.py` | The window's settings, Customize drafts, Reset to default, checks; no widgets |
+| `previews.py`, `player.py` | Temporary previews and playback |
+| `addons.py`, `addon_progress.py`, `health.py` | Add-on status, install, repair, uninstall; the system check |
+| `cli.py`, `cli_manage.py`, `options.py`, `display.py`, `display_health.py`, `guided.py` | The command line (`cli_manage.py`: saved styles, the add-on, cache and logs) |
+| `gui_app.py` + `app_*.py` | The main window, split by topic |
+| `gui_*.py`, `gui_modal.py`, `gui_widgets.py`, `gui_fields.py`, `gui_table.py` | The window's pages, dialogs and building blocks |
+| `dropfiles.py`, `launcher.py` | Windows only: drag and drop, and reopening a double-clicked console in Windows Terminal |
+
+Other folders: `packaging/` (build scripts, the PyInstaller spec and the pinned build
+requirements), `vendor/ffmpeg/` (the Windows FFmpeg, Git LFS), `bin/` (the release ZIPs),
+`tests/`, `docs/images/`.
+
+</details>
+
+Business rules live outside the window and the command line, so they can't drift apart.
+FFmpeg, FFprobe, Python and pip are always run with argument lists (never through a shell)
+and are stopped when cancelled or when the window closes.
+
+---
+
+<a id="-troubleshooting"></a>
+
 <a id="troubleshooting"></a>
 
-## 🛠️ Troubleshooting
+## 🛠️ Troubleshooting and limitations
 
 > [!TIP]
 > In the window, **Settings → System check** says what is wrong and what to do; on the
@@ -1326,146 +1677,6 @@ and set **Movement: Gentle** and **Speed: Slow**.
 
 ---
 
-<a id="reference"></a>
-
-## 📚 Reference
-
-<details markdown="1">
-<summary><strong>Settings and defaults</strong></summary>
-
-### Settings and defaults
-
-| Setting | What it changes | Default | Simple recommendation |
-|---|---|---|---|
-| Style | The whole sound, as a ready-made set | Studio | Studio; Gentle for acoustic music |
-| Movement | How far the music travels around you | Balanced (0.80) | Balanced; Gentle for calm music |
-| Speed | How quickly it goes around | Normal (8 s per circle) | Normal; faster than 5 s can make some people dizzy |
-| Space | How big the room sounds | Natural (0.25) | Natural; Dry for voices |
-| Keep bass centered | The bass (below 120 Hz) stays in the middle | On | On |
-| Height | Lets the sound float above ear level | 0 (ear level) | 0 |
-| Ease in and out | The movement grows in at the start and settles at the end | 3 s | 3 s |
-| Spin in time with the beat | Each circle lasts whole bars of music | Off (on in Groove) | On for dance and pop |
-| Keep the singer in the middle | The voice moves only a little and stays close to the middle | Off | On for songs with vocals (needs the add-on) |
-| Output format | The kind of file | MP3 | MP3; FLAC to keep every detail of the 8D mix |
-| Quality | How much detail a compressed file keeps | High | High |
-| Loudness | How loud the new song is | Match music apps (-14 LUFS) | Match music apps |
-| Get as close to the loudness as possible | Shaves the loudest peaks to get as close to the level as possible (very loud songs can still land a little under it) | Off | Off |
-| Peak limit | The loudest a peak may get | -1.5 dB (MP3, M4A, Opus), -1.0 dB (FLAC, WAV) | Leave it |
-| Songs at once | How many songs are made at the same time | A good value for your computer (1–16) | Leave it |
-| Preview length | How long a preview plays | 30 s | 15–30 s |
-
-</details>
-
-<details markdown="1">
-<summary><strong>Where Audio8D keeps things</strong></summary>
-
-### Where Audio8D keeps things
-
-| What | Windows | macOS | Linux |
-|---|---|---|---|
-| Settings (`settings.json`) and your styles (`presets.toml`) | `%APPDATA%\Audio8D` | `~/Library/Application Support/Audio8D` | `~/.config/audio8d` |
-| Log (`audio8d.log`) | `%LOCALAPPDATA%\Audio8D\logs` | `~/Library/Application Support/Audio8D/logs` | `~/.config/audio8d/logs` |
-| Remembered measurements, separated vocals | `%LOCALAPPDATA%\Audio8D\cache` | `~/Library/Caches/Audio8D` | `~/.cache/audio8d` |
-| The singer add-on | `%LOCALAPPDATA%\Audio8D\addon` | `~/Library/Application Support/Audio8D/addon` | `~/.local/share/audio8d/addon` |
-| Previews (deleted automatically) | `%TEMP%\Audio8D previews` | the system temporary folder | the system temporary folder |
-
-Setting the environment variable `AUDIO8D_HOME` to a folder keeps all of these (except
-previews) there instead. `--check` shows the log file's exact place; **Clear remembered
-data** (`--clear-cache`) and **Delete saved log files** (`--delete-logs`) empty the
-cache and the logs.
-
-</details>
-
-### How the sound is made
-
-First, a gentle filter below 5 Hz removes any DC offset and inaudible rumble, which would
-otherwise use up headroom (it changes nothing you can hear). A mono song is copied to both
-ears at its full level. Audio8D then splits the song into bass and the rest (at 120 Hz by
-default, so the bass stays centered). The rest is moved along a path around your head
-using the cues ears use: the tiny time difference between the ears, the level difference,
-and the shadow of the head. A little reverb (*Space*) helps the sound feel outside your
-head. Then everything is mixed back, loudness is measured (EBU R 128) and set, peaks are
-limited, and the file is encoded: MP3 with LAME, M4A with FFmpeg's AAC encoder, Opus with
-libopus, FLAC and WAV as 24-bit. All the work is done in 32-bit floating point, the song
-is resampled at most once (only when the format or the effect needs another rate), and a
-lossy file is encoded only once. The tags (title, artist, album, …) are copied, including
-from Opus and Ogg files, and so is the album picture where the format can hold one.
-
-By default the peaks are protected: if reaching the loudness target would need more than
-about 5 dB of peak limiting, the song stays slightly under the target instead (*Get as close
-to the loudness as possible* changes that, though very loud or punchy songs can still land
-a little under it).
-
-<details markdown="1">
-<summary><strong>How the sound was checked</strong></summary>
-
-The same 23 test files (tones, sweeps, silence, mono, 5.1, hot and clipped audio, DC
-offset, lossy and hi-res sources, tagged files and a real song) were converted to all five
-formats by the old and the new code and measured by the same script: loudness, true peak,
-clipping, DC offset, spectrum, stereo width and correlation, channel order, distortion,
-metadata and decoding errors. A long file name, a damaged MP3 and a file that isn't music
-were tried on the command line. The new code removed the DC offset (0.37–0.42 → 0.0001),
-let those files reach -14 LUFS, raised mono songs by the 3 dB they had lost, and kept the
-tags from Opus files. No new file clipped or failed to decode, and a real song changed by
-less than 0.1 dB in loudness and width. Nobody listened to the results as a formal
-listening test.
-
-</details>
-
-<details markdown="1">
-<summary><strong>Exact ranges, paths and engines</strong></summary>
-
-| Setting | Range | Option |
-|---|---|---|
-| Movement (intensity) | 0 – 1 | `--intensity` |
-| Seconds per circle | 2 – 100 | `--rotation-seconds` |
-| Room (ambience) | 0 – 1 | `--ambience` |
-| Bass crossover | 40 – 250 Hz, or off | `--bass` |
-| Height (elevation) | 0 – 1 | `--elevation` |
-| Ease in and out | 0 – 30 s | `--fade` |
-| Tempo | 40 – 240 BPM, or off | `--bpm` |
-| Loudness target | -30 – -5 LUFS | `--loudness` |
-| Peak limit | 0.0625 – 1 (about -24 to 0 dB; the window shows dB) | `--limiter-ceiling` |
-| MP3 variable quality | 0 (best) – 9 | `--quality` |
-| Bitrate | 128, 160, 192, 224, 256, 320 kbps | `--bitrate` |
-| Preview length | 5 – 120 s (window: 15, 30, 45 or 60 s) | `--preview` |
-| Songs at once | 1 – 16 | `--jobs` |
-
-**Paths:** *circle* (all the way round), *arc* (side to side in front), *figure8* (loops
-around each ear), *wander* (drifts). **Engine:** *3d* (the cues above) or *pan* (simple
-left-right, safe for speakers). **Beat sync** detects the tempo and rounds the circle to
-2, 4, 8, 16 or 32 beats.
-
-</details>
-
-<details markdown="1">
-<summary><strong>Words used in this guide</strong></summary>
-
-### Words used in this guide
-
-| Word | Meaning |
-|---|---|
-| **8D audio** | Music that seems to move around your head when you use headphones. |
-| **Style** | A ready-made group of sound settings. |
-| **Default** / **Custom** | The settings every song uses / settings that belong to one song. |
-| **Customize** | Change the settings of one song (or the default). |
-| **Preview** | A temporary listen that does not create the final file. |
-| **Compare A/B** | A temporary listen to the original, then the 8D version. |
-| **Create** | Make and save the new 8D files. |
-| **Output** | How the new file is saved: format, quality, loudness, folder. |
-| **Bitrate** | A quality/size setting for compressed audio such as MP3. |
-| **Lossless** | Audio saved without throwing any sound data away (FLAC, WAV). |
-| **LUFS** | The unit for how loud music feels; music apps use about -14. |
-| **Add-on** | An optional extra part you can install and remove. |
-| **FFmpeg** | The sound program Audio8D uses to do the work. |
-| **Terminal** | A window where you type commands instead of clicking. |
-| **Git / Git LFS** | The tool that downloads the source code / its add-on for large files. |
-| **venv** | A private Python environment just for Audio8D, in the `.venv` folder. |
-
-</details>
-
----
-
 <a id="known-limitations"></a>
 
 ## ⚠️ Known limitations
@@ -1518,192 +1729,19 @@ left-right, safe for speakers). **Beat sync** detects the tempo and rounds the c
 
 ---
 
-<a id="running-from-source"></a>
+## 🤝 Contributing
 
-## 👩‍💻 Running from source
+Open a [reproducible issue](https://github.com/gcfernando/audio-8d/issues) with your OS, Python or package version, FFmpeg version, command or window steps and the relevant error. Use a generated tone or a shareable sample. Keep GUI and CLI behavior aligned, update this guide when options change and run the relevant tests, including `tests/unit/test_readme_commands.py`.
 
-*This part is for developers. Normal users should use a package (see
-[Quick start](#quick-start)).*
+## 🔒 Security
 
-**You need:**
+Review saved logs before attaching them: filenames and paths may identify private media. Do not include copyrighted or confidential recordings in a public report. For a suspected vulnerability, use GitHub private vulnerability reporting if enabled, or arrange a private channel with the maintainer before sharing sensitive details.
 
-| Software | Windows | Linux | macOS (not tested) |
-|---|---|---|---|
-| **Python 3.10 or newer**, with Tk | [python.org](https://www.python.org/downloads/) (tick *Add python.exe to PATH*) | `sudo apt install python3 python3-venv python3-pip python3-tk` | `brew install python@3.13 python-tk@3.13` |
-| **Git** | [Git for Windows](https://git-scm.com/download/win) plus [Git LFS](https://git-lfs.com) (check `git lfs version`) | `sudo apt install git` | `brew install git` |
-| **FFmpeg 7.0 or newer** | Included in the repository: `vendor\ffmpeg\windows-x86_64` (Git LFS) | Install it yourself (below) | `brew install ffmpeg` (check `ffmpeg -version`) |
-| **CustomTkinter, Pillow** | `pip` (below) | `pip` (below) | `pip` (below) |
-
-**Get the code and run it (Windows):**
-
-```powershell
-git lfs install
-git clone https://github.com/gcfernando/audio-8d.git
-cd audio-8d
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install customtkinter pillow
-python src\__main__.py --check
-python src\__main__.py --gui
-```
-
-- `vendor\ffmpeg\windows-x86_64\ffmpeg.exe` must be about 105 MB. If it is only a few
-  hundred bytes, Git LFS was missing: install it and run `git lfs pull`.
-- If Windows refuses to run `Activate.ps1`, run
-  `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` once, or skip the venv.
-- Double-clicking `Audio8D.pyw` also opens the window, using your normal Python (not the
-  venv), so the two packages must be installed there too.
-
-**Get the code and run it (Linux or macOS):**
-
-```bash
-git clone https://github.com/gcfernando/audio-8d.git
-cd audio-8d
-python3 -m venv .venv
-. .venv/bin/activate
-python -m pip install customtkinter pillow
-python src/__main__.py --check
-python src/__main__.py --gui
-```
-
-Git LFS is not needed on Linux or macOS. On macOS use `python3.13 -m venv .venv`.
-
-> [!WARNING]
-> **FFmpeg 7 on Linux.** Ubuntu's own `ffmpeg` package is too old (22.04 has 4.4, 24.04
-> has 6.1): `--check` passes but songs with any room sound fail (FFmpeg's own words are
-> *Option 'irnorm' not found*; Audio8D says *Your FFmpeg is older than version 7*).
-
-A tested fix for 64-bit x86 is the static build:
-
-```bash
-curl -LO https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz
-mkdir ffmpeg-static
-tar -xf ffmpeg-release-amd64-static.tar.xz -C ffmpeg-static --strip-components=1
-sudo install -m 755 ffmpeg-static/ffmpeg ffmpeg-static/ffprobe /usr/local/bin/
-ffmpeg -version
-```
-
-**Install as commands, with the developer tools:**
-
-```powershell
-python -m pip install -e ".[gui,dev]"
-```
-
-This adds the commands `audio8d` and `audio8d-gui`, plus pytest, ruff, pylint and pyright.
-An editable install (`-e`) finds FFmpeg like running from source. A normal
-(non-editable) install doesn't: put FFmpeg on your PATH, choose it in **Settings**, or use
-`--ffmpeg PATH --ffprobe PATH`. Install the singer add-on from **Settings** (the `stems`
-extra exists but is not needed).
-
----
-
-<a id="building-the-packages"></a>
-
-## 📦 Building the packages
-
-Each package is built **on its own system**: PyInstaller can't build for another system.
-From the repository folder (`audio-8d`):
-
-```powershell
-python packaging/build_release.py
-```
-
-On Linux and macOS write `python3`. On Windows,
-`powershell -ExecutionPolicy Bypass -File packaging\build.ps1` does the same (it calls
-`build_release.py`; the old `-Zip` switch is accepted but no longer needed).
-
-**Build requirements:**
-
-| | Windows | Linux | macOS |
-|---|---|---|---|
-| Python 3.10+ with Tk | python.org | `sudo apt install python3 python3-venv python3-tk` | Homebrew (as above) |
-| Git | with Git LFS (for `vendor\ffmpeg`) | yes | yes |
-| Internet | first build (packages) | first build (packages and FFmpeg) | first build (packages and FFmpeg) |
-
-**What it does:**
-
-1. Makes its own environment in `build/venv-<system>` and installs Audio8D with its window
-   packages and PyInstaller, at the exact versions pinned in
-   `packaging/requirements-build.txt` (the same versions `THIRD-PARTY-NOTICES.md` lists).
-2. Gets FFmpeg 7 or newer: on Windows from `vendor/ffmpeg/windows-x86_64`; on Linux x86_64
-   it downloads the johnvansickle.com static build and checks its published MD5; on macOS
-   it downloads the osxexperts.net Apple Silicon build (evermeet.cx on Intel; macOS
-   downloads not verified). An older FFmpeg is refused. `--ffmpeg-dir FOLDER` uses your own
-   `ffmpeg` and `ffprobe` (7+) instead.
-3. Builds the programs from `packaging/audio8d.spec`, adds the README, licences and
-   `HOW TO RUN.txt`, and writes **`bin/Audio8D-<version>-<system>-<processor>.zip`**,
-   keeping the "may run" marks.
-4. **Tests the package:** unpacks it to a folder with spaces in its name, runs `--version`
-   and `--check` with no Python on the PATH, and converts a generated test tone.
-   `--skip-check` skips this. Any failure stops with *Build failed: …* and says why.
-
-Temporary files stay in `build/` (not stored in git).
-
-**What `bin` contains** (only the release packages, stored with Git LFS):
-
-```text
-bin/
-  Audio8D-1.0.0-windows-x86_64.zip
-  Audio8D-1.0.0-linux-x86_64.zip
-  Audio8D-1.0.0-macos-arm64.zip     (after a build on a Mac)
-```
-
-> [!NOTE]
-> There is no CI workflow yet; build each package on its own system.
-
----
-
-<a id="tests-and-project-layout"></a>
-
-## 🧪 Tests and project layout
-
-**Tests and checks** (from the repository folder, after `pip install -e ".[gui,dev]"`):
-
-```powershell
-python -m pytest                        # all tests (window tests need a screen)
-python -m ruff check .
-python -m ruff format --check .
-python -m pylint src tests packaging/build_release.py
-python -m pyright src tests
-```
-
-The suite has **1382 tests**. They include the real window, the command line, the add-on
-install/repair/uninstall (with pip faked), temporary-preview cleanup, a check that the
-window and the command line offer the same features, and a check that every `audio8d`
-command in this guide is valid.
-
-<details markdown="1">
-<summary><strong>Layout of <code>src</code> (the <code>audio8d</code> package)</strong></summary>
-
-| Part | Holds |
-|---|---|
-| `pipeline.py`, `batch.py`, `effects/`, `analysis/`, `ffmpeg/`, `files/` | The conversion, shared by the window and the command line |
-| `core/presets.py`, `core/sound_levels.py`, `core/style_guide.py` | The styles (sound only), the standard output, the Movement/Speed/Space words |
-| `core/locations.py` | Where settings, logs and the bundled FFmpeg are found |
-| `song_settings.py`, `per_song.py` | How a song's own settings combine with the defaults (window and `--per-song`) |
-| `gui_model.py` | The window's settings, Customize drafts, Reset to default, checks; no widgets |
-| `previews.py`, `player.py` | Temporary previews and playback |
-| `addons.py`, `addon_progress.py`, `health.py` | Add-on status, install, repair, uninstall; the system check |
-| `cli.py`, `cli_manage.py`, `options.py`, `display.py`, `display_health.py`, `guided.py` | The command line (`cli_manage.py`: saved styles, the add-on, cache and logs) |
-| `gui_app.py` + `app_*.py` | The main window, split by topic |
-| `gui_*.py`, `gui_modal.py`, `gui_widgets.py`, `gui_fields.py`, `gui_table.py` | The window's pages, dialogs and building blocks |
-| `dropfiles.py`, `launcher.py` | Windows only: drag and drop, and reopening a double-clicked console in Windows Terminal |
-
-Other folders: `packaging/` (build scripts, the PyInstaller spec and the pinned build
-requirements), `vendor/ffmpeg/` (the Windows FFmpeg, Git LFS), `bin/` (the release ZIPs),
-`tests/`, `docs/images/`.
-
-</details>
-
-Business rules live outside the window and the command line, so they can't drift apart.
-FFmpeg, FFprobe, Python and pip are always run with argument lists (never through a shell)
-and are stopped when cancelled or when the window closes.
-
----
+<a id="-credits-and-licences"></a>
 
 <a id="credits-and-licences"></a>
 
-## 🙏 Credits and licences
+## 📄 Support and license
 
 Audio8D is developed by **Gehan Fernando** and released under the [MIT License](LICENSE).
 It uses
