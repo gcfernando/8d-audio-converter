@@ -24,11 +24,11 @@ Find the GUI walkthrough, CLI examples, audio-processing details and packaging i
 | Understand the conversion stages | [Processing architecture](README.md#how-it-works) |
 | Develop or build portable packages | [Source setup](README.md#running-from-source), [packaging](README.md#building-the-packages) and [tests](README.md#tests-and-project-layout) |
 | Diagnose platform or audio limitations | [Troubleshooting](README.md#troubleshooting) and [known limitations](README.md#known-limitations) |
-| Review bundled-software licensing | [Third-party notices](THIRD-PARTY-NOTICES.md) and [MIT license](LICENSE) |
+| Review bundled-software licensing | [Third-party notices](THIRD-PARTY-NOTICES.md) and [MIT license](https://github.com/gcfernando/8d-audio-converter/blob/main/LICENSE) |
 
 ## 🔗 Source references
 
-[Package metadata and optional dependencies](pyproject.toml) · [Pipeline implementation](src/pipeline.py) · [CLI option definitions](src/options.py) · [Build entry point](packaging/build_release.py)
+[Package metadata and optional dependencies](https://github.com/gcfernando/8d-audio-converter/blob/main/pyproject.toml) · [Pipeline implementation](https://github.com/gcfernando/8d-audio-converter/blob/main/src/pipeline.py) · [CLI option definitions](https://github.com/gcfernando/8d-audio-converter/blob/main/src/options.py) · [Build entry point](https://github.com/gcfernando/8d-audio-converter/blob/main/packaging/build_release.py)
 
 The README is the application's full user guide, also linked from its Help action. This index routes readers to that guide rather than maintaining a second copy of CLI options.
 
@@ -48,4 +48,4 @@ and preview behavior from measured output. For a focused, conversion-free check 
 CLI examples, run `python -m pytest tests/unit/test_readme_commands.py` from the
 repository after installing the development dependencies.
 
-[Repository](https://github.com/gcfernando/audio-8d) · [Project overview](README.md)
+[Repository](https://github.com/gcfernando/8d-audio-converter) · [Project overview](README.md)

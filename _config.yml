@@ -1,6 +1,6 @@
 # GitHub Pages documentation site; does not configure application deployment.
 url: "https://gcfernando.github.io"
-baseurl: "/audio-8d"
+baseurl: "/8d-audio-converter"
 title: "Audio8D"
 description: "FFmpeg-based 8D audio converter for Windows and Linux, with desktop and command-line interfaces and MP3, FLAC, WAV, M4A and Opus output."
 lang: "en"
@@ -29,7 +29,7 @@ defaults:
       description: "Audio8D bundled dependency versions, license texts and FFmpeg source links for the desktop and command-line audio converter."
 
 # Public documentation navigation and presentation.
-repository: gcfernando/audio-8d
+repository: gcfernando/8d-audio-converter
 theme: jekyll-theme-primer
 projects_hub: https://gcfernando.github.io/gcfernando/projects/
 project_category: "Audio & desktop"

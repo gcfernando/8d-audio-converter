@@ -5,6 +5,8 @@
 
 # Audio8D — FFmpeg 8D Audio Converter for Windows and Linux
 
+**Read online:** [Documentation website](https://gcfernando.github.io/8d-audio-converter/) · [All guides](https://gcfernando.github.io/8d-audio-converter/documentation/)
+
 <a id="-a-python-desktop-and-command-line-tool-for-creating-customizable-headphone-focused-8d-audio"></a>
 
 🎧 A Python desktop and command-line tool for creating customizable headphone-focused 8D audio.
@@ -15,8 +17,8 @@
 <img src="https://img.shields.io/badge/version-1.0.0-7B2FF7?style=for-the-badge" alt="Version 1.0.0"/>
 <img src="https://img.shields.io/badge/python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.12 (included in the packages)"/>
 <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux-0078D4?style=for-the-badge" alt="Platform: Windows and Linux (macOS not tested)"/>
-<a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-16A34A?style=for-the-badge" alt="Licence: MIT"/></a>
-<a href="https://github.com/gcfernando/audio-8d/tree/main/tests"><img src="https://img.shields.io/badge/tests-source-FF4FD8?style=for-the-badge" alt="Browse the Audio8D test suite"/></a>
+<a href="https://github.com/gcfernando/8d-audio-converter/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-16A34A?style=for-the-badge" alt="Licence: MIT"/></a>
+<a href="https://github.com/gcfernando/8d-audio-converter/tree/main/tests"><img src="https://img.shields.io/badge/tests-source-FF4FD8?style=for-the-badge" alt="Browse the Audio8D test suite"/></a>
 </p>
 <p>
 <img src="https://img.shields.io/badge/saves-MP3%20%7C%20FLAC%20%7C%20WAV%20%7C%20M4A%20%7C%20Opus-555?style=flat-square" alt="Saves MP3, FLAC, WAV, M4A and Opus"/>
@@ -197,7 +199,7 @@ the sound of MP4/WEBM videos.
    | 🍎 Mac with Apple Silicon (M1 or newer) | `Audio8D-1.0.0-macos-arm64.zip` | ⚠️ **Not built or tested yet** |
 
 2. **Get it.** The packages are in the **`bin`** folder of the Audio8D repository
-   ([github.com/gcfernando/audio-8d/tree/main/bin](https://github.com/gcfernando/audio-8d/tree/main/bin)),
+   ([github.com/gcfernando/audio-8d/tree/main/bin](https://github.com/gcfernando/8d-audio-converter/tree/main/bin)),
    or someone can give you a copy. There is no separate download page and no GitHub
    release. If the package for your system is not in `bin`, it hasn't been built yet (see
    [Building the packages](#building-the-packages)).
@@ -1420,8 +1422,8 @@ data if a source was replaced while its size and timestamp stayed the same.
 
 ```powershell
 git lfs install
-git clone https://github.com/gcfernando/audio-8d.git
-cd audio-8d
+git clone https://github.com/gcfernando/8d-audio-converter.git
+cd 8d-audio-converter
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install customtkinter pillow
@@ -1441,8 +1443,8 @@ python src\__main__.py --gui
 **Get the code and run it (Linux or macOS):**
 
 ```bash
-git clone https://github.com/gcfernando/audio-8d.git
-cd audio-8d
+git clone https://github.com/gcfernando/8d-audio-converter.git
+cd 8d-audio-converter
 python3 -m venv .venv
 . .venv/bin/activate
 python -m pip install customtkinter pillow
@@ -1824,7 +1826,7 @@ and set **Movement: Gentle** and **Speed: Slow**.
 
 ## 🤝 Contributing
 
-Open a [reproducible issue](https://github.com/gcfernando/audio-8d/issues) with your OS, Python or package version, FFmpeg version, command or window steps and the relevant error. Use a generated tone or a shareable sample. Keep GUI and CLI behavior aligned, update this guide when options change and run the relevant tests, including `tests/unit/test_readme_commands.py`.
+Open a [reproducible issue](https://github.com/gcfernando/8d-audio-converter/issues) with your OS, Python or package version, FFmpeg version, command or window steps and the relevant error. Use a generated tone or a shareable sample. Keep GUI and CLI behavior aligned, update this guide when options change and run the relevant tests, including `tests/unit/test_readme_commands.py`.
 
 ## 🔒 Security
 
@@ -1836,7 +1838,7 @@ Review saved logs before attaching them: filenames and paths may identify privat
 
 ## 📄 Support and license
 
-Audio8D is developed by **Gehan Fernando** and released under the [MIT License](LICENSE).
+Audio8D is developed by **Gehan Fernando** and released under the [MIT License](https://github.com/gcfernando/8d-audio-converter/blob/main/LICENSE).
 It uses
 [FFmpeg](https://ffmpeg.org) (GPL-3.0; included in every package),
 [Python](https://www.python.org) (included in every package),
@@ -1861,4 +1863,4 @@ BSD-3-Clause).
 
 ## Documentation links
 
-[Read all Audio8D guides online](https://gcfernando.github.io/audio-8d/documentation/) · [Project overview](https://gcfernando.github.io/audio-8d/) · [All developer projects](https://gcfernando.github.io/gcfernando/projects/)
+[Read all Audio8D guides online](https://gcfernando.github.io/8d-audio-converter/documentation/) · [Project overview](https://gcfernando.github.io/8d-audio-converter/) · [All developer projects](https://gcfernando.github.io/gcfernando/projects/)

@@ -31,4 +31,4 @@ Under the GPL you may also ask whoever gave you this copy of Audio8D for the cor
 
 ## Documentation links
 
-[Read all Audio8D guides online](https://gcfernando.github.io/audio-8d/documentation/) · [Project overview](https://gcfernando.github.io/audio-8d/) · [All developer projects](https://gcfernando.github.io/gcfernando/projects/)
+[Read all Audio8D guides online](https://gcfernando.github.io/8d-audio-converter/documentation/) · [Project overview](https://gcfernando.github.io/8d-audio-converter/) · [All developer projects](https://gcfernando.github.io/gcfernando/projects/)
