@@ -199,7 +199,7 @@ the sound of MP4/WEBM videos.
    | 🍎 Mac with Apple Silicon (M1 or newer) | `Audio8D-1.0.0-macos-arm64.zip` | ⚠️ **Not built or tested yet** |
 
 2. **Get it.** The packages are in the **`bin`** folder of the Audio8D repository
-   ([github.com/gcfernando/audio-8d/tree/main/bin](https://github.com/gcfernando/8d-audio-converter/tree/main/bin)),
+   ([github.com/gcfernando/8d-audio-converter/tree/main/bin](https://github.com/gcfernando/8d-audio-converter/tree/main/bin)),
    or someone can give you a copy. There is no separate download page and no GitHub
    release. If the package for your system is not in `bin`, it hasn't been built yet (see
    [Building the packages](#building-the-packages)).
@@ -1113,7 +1113,7 @@ or for scripts.
 |---|---|
 | The Windows package | `.\audio8d-cli.exe` (in the `Audio8D` folder) |
 | The Linux or macOS package | `./audio8d-cli` (in the `Audio8D` folder) |
-| The source code (developers) | `python src\__main__.py` or `python src/__main__.py` (in the `audio-8d` folder, venv on) |
+| The source code (developers) | `python src\__main__.py` or `python src/__main__.py` (from the repository root, venv on) |
 
 The examples below write **`audio8d`**; replace it with the line that fits you. Put names
 with spaces in **"quotes"**. Typing the command alone starts a **step-by-step helper**
@@ -1488,7 +1488,7 @@ extra exists but is not needed).
 ## 📦 Building the packages
 
 Each package is built **on its own system**: PyInstaller can't build for another system.
-From the repository folder (`audio-8d`):
+From the repository root (`8d-audio-converter`):
 
 ```powershell
 python packaging/build_release.py
