@@ -52,7 +52,6 @@ you, past the other ear and back.
 > a little different. On speakers it sounds much weaker (the **Speakers** style helps).
 
 
-
 ---
 
 <a id="contents"></a>
@@ -1545,7 +1544,7 @@ bin/
 ```
 
 > [!NOTE]
-> There is no CI workflow yet; build each package on its own system.
+> The Repository standards workflow checks metadata only. There is no application packaging CI workflow; build each package on its own system.
 
 ---
 
@@ -1864,3 +1863,7 @@ BSD-3-Clause).
 ## Documentation links
 
 [Read all Audio8D guides online](https://gcfernando.github.io/8d-audio-converter/documentation/) · [Project overview](https://gcfernando.github.io/8d-audio-converter/) · [All developer projects](https://gcfernando.github.io/gcfernando/projects/)
+
+## Repository maintenance
+
+[Contributing](https://github.com/gcfernando/8d-audio-converter/blob/main/CONTRIBUTING.md) · [Security policy](https://github.com/gcfernando/8d-audio-converter/blob/main/SECURITY.md) · [Repository standards](https://github.com/gcfernando/8d-audio-converter/blob/main/REPOSITORY_STANDARDS.md)

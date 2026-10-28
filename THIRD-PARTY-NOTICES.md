@@ -1,4 +1,5 @@
 <!-- Developed by ::> Gehan Fernando -->
+
 # Third-party software in Audio8D
 
 Audio8D is developed by Gehan Fernando. The standalone app (`Audio8D` and `audio8d-cli`; `Audio8D.exe` and `audio8d-cli.exe` on Windows) ships with the following third-party software. Each keeps its own licence; the full texts are in the `licenses` folder next to this file.
