@@ -3,7 +3,15 @@
 
 <img src="docs/images/logo.png" alt="The Audio8D icon: white headphones on a purple-to-pink rounded square." width="120"/>
 
-# Audio8D — FFmpeg 8D Audio Converter for Windows and Linux
+<a id="audio8d--ffmpeg-8d-audio-converter-for-windows-and-linux"></a>
+
+# Audio8D — 8D Audio Converter for Windows and Linux
+
+<p align="center"><strong>Give your music movement. Preview it. Make it your own.</strong></p>
+
+[![Repository standards](https://github.com/gcfernando/8d-audio-converter/actions/workflows/repository-standards.yml/badge.svg)](https://github.com/gcfernando/8d-audio-converter/actions/workflows/repository-standards.yml) [![Read the documentation](https://img.shields.io/badge/Read-the_documentation-2563eb?style=flat-square)](https://gcfernando.github.io/8d-audio-converter/)
+
+> **Start here:** [Get started](#guide-quick-start) · [Use the desktop app](#guide-your-first-song-the-window) · [Use the CLI](#guide-command-line) · [Know the limits](#guide-known-limitations)
 
 **Read online:** [Documentation website](https://gcfernando.github.io/8d-audio-converter/) · [All guides](https://gcfernando.github.io/8d-audio-converter/documentation/)
 
@@ -20,16 +28,7 @@
 <a href="https://github.com/gcfernando/8d-audio-converter/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-16A34A?style=for-the-badge" alt="Licence: MIT"/></a>
 <a href="https://github.com/gcfernando/8d-audio-converter/tree/main/tests"><img src="https://img.shields.io/badge/tests-source-FF4FD8?style=for-the-badge" alt="Browse the Audio8D test suite"/></a>
 </p>
-<p>
-<img src="https://img.shields.io/badge/saves-MP3%20%7C%20FLAC%20%7C%20WAV%20%7C%20M4A%20%7C%20Opus-555?style=flat-square" alt="Saves MP3, FLAC, WAV, M4A and Opus"/>
-<img src="https://img.shields.io/badge/powered%20by-FFmpeg-007808?style=flat-square&logo=ffmpeg&logoColor=white" alt="Powered by FFmpeg"/>
-<img src="https://img.shields.io/badge/listen%20with-headphones-111827?style=flat-square" alt="Listen with headphones"/>
-</p>
-
-**[🚀 Quick start](#quick-start)** ·
-**[🎵 Your first song](#your-first-song-the-window)** ·
-**[⌨️ Command line](#command-line)** ·
-**[🛠️ Troubleshooting](#troubleshooting)**
+**Export:** MP3 · FLAC · WAV · M4A · Opus · **Engine:** FFmpeg · **Listen with:** headphones.
 
 </div>
 
@@ -186,6 +185,8 @@ the sound of MP4/WEBM videos.
 <a id="quick-start"></a>
 
 <a id="‍-running-from-source"></a>
+
+<a id="guide-quick-start"></a>
 
 ## 🚀 Quick start
 
@@ -515,6 +516,8 @@ left-right, safe for speakers). **Beat sync** detects the tempo and rounds the c
 Use the window walkthrough for interactive conversion or the command-line reference for scripts. Both share the conversion pipeline and support per-song settings.
 
 <a id="your-first-song-the-window"></a>
+
+<a id="guide-your-first-song-the-window"></a>
 
 ## 🎵 Your first song (the window)
 
@@ -1100,6 +1103,8 @@ A few things only make sense on one side:
 ---
 
 <a id="command-line"></a>
+
+<a id="guide-command-line"></a>
 
 ## ⌨️ Command line
 
@@ -1762,6 +1767,8 @@ and set **Movement: Gentle** and **Speed: Slow**.
 ---
 
 <a id="known-limitations"></a>
+
+<a id="guide-known-limitations"></a>
 
 ## ⚠️ Known limitations
 
