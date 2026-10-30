@@ -10,7 +10,7 @@ The builder writes `bin/Audio8D-<base-version>-<platform>.zip`. It preserves exe
 
 ## A release for each main push
 
-[release.yml](../.github/workflows/release.yml) runs on every push to `main`, on pull requests and on manual dispatch. It builds on native Windows and Linux runners, runs the converter and GUI test suites, and retains one checked ZIP from each platform. Only a successful **push to main**, with both required platform jobs successful, reaches publication. Pull requests and manual runs only create artifacts.
+[release.yml](https://github.com/gcfernando/8d-audio-converter/actions/workflows/release.yml) runs on every push to `main`, on pull requests and on manual dispatch. It builds on native Windows and Linux runners, runs the converter and GUI test suites, and retains one checked ZIP from each platform. Only a successful **push to main**, with both required platform jobs successful, reaches publication. Pull requests and manual runs only create artifacts.
 
 The workflow has no branch-level concurrency group, so a newer push does not cancel an older run or replace a pending push. Its unique tag is `v<base-version>-main.<run-id>.<full-commit-sha>`. The application version remains the base version from `pyproject.toml`; release notes identify the exact build commit and run. Every successful push keeps its own release rather than replacing a rolling download.
 
@@ -26,7 +26,7 @@ The packages are **unsigned**. The workflow does not provide Windows Authenticod
 
 Download an application ZIP and `SHA256SUMS.txt` from the same release. Compare the expected entry with `Get-FileHash <zip> -Algorithm SHA256` on Windows or `sha256sum <zip>` on Linux before extracting. Checksums detect changed bytes; they do not replace publisher trust or code signing.
 
-Audio8D's code has an [MIT license](../LICENSE). Bundled FFmpeg uses GPLv3 and other components retain separate licenses. Preserve [THIRD-PARTY-NOTICES.md](../THIRD-PARTY-NOTICES.md), the [license texts](../licenses) and corresponding-source information when redistributing. Each newly built package records its actual Python/platform identity in `BUILD-INFO.txt`; runtime patch versions can differ from the original repository ZIPs.
+Audio8D's code has an [MIT license](../LICENSE). Bundled FFmpeg uses GPLv3 and other components retain separate licenses. Preserve [THIRD-PARTY-NOTICES.md](../THIRD-PARTY-NOTICES.md), the [license texts](https://github.com/gcfernando/8d-audio-converter/tree/main/licenses) and corresponding-source information when redistributing. Each newly built package records its actual Python/platform identity in `BUILD-INFO.txt`; runtime patch versions can differ from the original repository ZIPs.
 
 ## Verification status
 

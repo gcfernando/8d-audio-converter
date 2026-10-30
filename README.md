@@ -24,8 +24,8 @@ The repository currently includes these portable packages:
 
 | System | Download | Launch after extracting the entire ZIP |
 | --- | --- | --- |
-| Windows x86_64 | [Audio8D 1.0.0 for Windows](bin/Audio8D-1.0.0-windows-x86_64.zip) | `Audio8D\Audio8D.exe` |
-| Linux x86_64 | [Audio8D 1.0.0 for Linux](bin/Audio8D-1.0.0-linux-x86_64.zip) | `./Audio8D/Audio8D` |
+| Windows x86_64 | [Audio8D 1.0.0 for Windows](https://github.com/gcfernando/8d-audio-converter/raw/refs/heads/main/bin/Audio8D-1.0.0-windows-x86_64.zip) | `Audio8D\Audio8D.exe` |
+| Linux x86_64 | [Audio8D 1.0.0 for Linux](https://github.com/gcfernando/8d-audio-converter/raw/refs/heads/main/bin/Audio8D-1.0.0-linux-x86_64.zip) | `./Audio8D/Audio8D` |
 
 Keep all companion files together. These packages bundle Python and FFmpeg; a separate Python installation is unnecessary for ordinary conversion. Linux desktop playback needs an available desktop/audio environment. The packages are **unsigned**. macOS build code exists, but macOS remains untested and no macOS download is offered here.
 
@@ -135,7 +135,7 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md), [repository standards](REPOSITORY_STAND
 
 ## License and third-party software
 
-Developed by Gehan Fernando. Audio8D's own code is under the [MIT License](LICENSE). Bundled FFmpeg, Python and libraries retain separate terms; see [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) and the [license texts](licenses). The packaged FFmpeg builds use GPLv3. Preserve notices and the corresponding-source information when redistributing packages.
+Developed by Gehan Fernando. Audio8D's own code is under the [MIT License](LICENSE). Bundled FFmpeg, Python and libraries retain separate terms; see [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) and the [license texts](https://github.com/gcfernando/8d-audio-converter/tree/main/licenses). The packaged FFmpeg builds use GPLv3. Preserve notices and the corresponding-source information when redistributing packages.
 
 <a id="audio8d--ffmpeg-8d-audio-converter-for-windows-and-linux"></a>
 <a id="-a-python-desktop-and-command-line-tool-for-creating-customizable-headphone-focused-8d-audio"></a>
