@@ -11,11 +11,13 @@ import os
 import shutil
 import time
 from pathlib import Path
+from unittest.mock import Mock
 
 import pytest
 from gui_helpers import copies, customize, pump, read, tagged, texts
 
 from src.gui_model import song_config
+from src.player import PLAYING, STOPPED, Player
 
 pytestmark = pytest.mark.skipif(
     importlib.util.find_spec("customtkinter") is None,
@@ -213,8 +215,28 @@ def test_style_choice_reaches_the_real_conversion_of_each_song(
 
 
 def test_every_song_can_be_previewed_on_its_own(
-    app, dynamic_song: Path, tmp_path: Path
+    app, dynamic_song: Path, tmp_path: Path, monkeypatch
 ) -> None:
+    # Rendering and GUI state are real; no audio device or external player is needed.
+    playback = Mock(spec=Player)
+    playback.file = None
+    playback.state.return_value = STOPPED
+
+    def load(file):
+        playback.file = file
+
+    def play(*, from_start=False):
+        assert from_start and playback.file.is_file()
+        playback.state.return_value = PLAYING
+
+    def close():
+        playback.file = None
+        playback.state.return_value = STOPPED
+
+    playback.load.side_effect = load
+    playback.play.side_effect = play
+    playback.close.side_effect = close
+    monkeypatch.setattr(app, "player", playback)
     other = tmp_path / "other" / "dynamic.wav"
     other.parent.mkdir()
     shutil.copy(dynamic_song, other)
@@ -396,7 +418,9 @@ def test_what_will_happen_is_summed_up_before_starting(app, stereo_tone: Path) -
     for words in ("1 song", "Studio; 1 song has custom settings", "MP3, High quality",
                   "Match music apps", "Next to each original song"):  # fmt: skip
         assert words in text, words
-    assert review.start.cget("text").strip() == "Create 1 song"
+    # Windows can draw the icon as an image; other platforms use a text glyph.
+    label = review.start.cget("text").strip()
+    assert label in ("Create 1 song", "▶  Create 1 song")
 
 
 def test_a_failing_song_shows_the_reason_and_can_be_retried(

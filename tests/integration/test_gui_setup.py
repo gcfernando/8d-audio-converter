@@ -905,17 +905,38 @@ def _popups(app):
      "zoomed"],
 )  # fmt: skip
 def test_every_popup_opens_centred_over_the_window(app, where: str) -> None:
+    from src.gui_dialogs import (  # pylint: disable=import-outside-toplevel
+        _DECORATION,
+        _scaling,
+    )
+
     if where == "zoomed":
-        app.state("zoomed")
+        if app.tk.call("tk", "windowingsystem") == "x11":
+            app.attributes("-zoomed", True)
+            pump(app, lambda: bool(app.attributes("-zoomed")), 2)
+            if not app.attributes("-zoomed"):
+                app.attributes("-zoomed", False)
+                pytest.skip("X11 display has no window manager supporting maximization")
+        else:
+            app.state("zoomed")
     else:
         app.geometry(where)
     pump(app, lambda: False, 0.8)
     try:
         for name, popup in _popups(app):
             pump(app, lambda: False, 0.4)
-            # Measured from the window's own place and size, never the screen's
-            assert _centre(popup) == pytest.approx(_centre(app), abs=2), name
+            parent_x, parent_y = _centre(app)
+            popup_x, popup_y = _centre(popup)
+            assert popup_x == pytest.approx(parent_x, abs=2), name
+            # Tall popups keep their title bar visible on a small maximized desktop.
+            # All other positions must still be exactly centered over the parent.
+            _left, title_bar = _DECORATION[_scaling(app)]
+            highest = min(app.winfo_rooty() - title_bar, 0)
+            top = max(parent_y - popup.winfo_height() / 2, highest + title_bar)
+            assert popup_y == pytest.approx(top + popup.winfo_height() / 2, abs=2), name
     finally:
+        if app.tk.call("tk", "windowingsystem") == "x11":
+            app.attributes("-zoomed", False)
         app.state("normal")
         app.geometry("1320x880")
 

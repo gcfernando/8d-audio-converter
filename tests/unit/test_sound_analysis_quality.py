@@ -9,13 +9,16 @@ from typing import Any
 
 import pytest
 
-from src import EffectConfig, cache
+from src import DependencyError, EffectConfig, cache
 from src.analysis import quality
 from src.analysis.quality import check_output, correlation_from_levels
 from src.core.types import Trim
 from src.ffmpeg import FFmpegToolchain
 
-_VENDOR = Path(__file__).resolve().parents[2] / "vendor/ffmpeg/windows-x86_64"
+try:
+    _TOOLS: FFmpegToolchain | None = FFmpegToolchain.discover()
+except DependencyError:
+    _TOOLS = None
 
 
 def _db(power: float) -> float:
@@ -85,11 +88,10 @@ def test_check_output_reads_the_meter_and_the_levels(
     assert not report.mono_safe
 
 
-@pytest.mark.skipif(
-    not (_VENDOR / "ffmpeg.exe").is_file(), reason="needs the bundled FFmpeg"
-)
+@pytest.mark.skipif(_TOOLS is None, reason="needs a runnable FFmpeg toolchain")
 def test_partly_cancelling_song_is_not_called_mono_safe(tmp_path: Path) -> None:
-    ffmpeg = _VENDOR / "ffmpeg.exe"
+    assert _TOOLS is not None
+    ffmpeg = _TOOLS.ffmpeg
     song = tmp_path / "flip.wav"
     # Right is the left flipped for 60% of every second: true correlation -0.2
     subprocess.run(
@@ -106,8 +108,7 @@ def test_partly_cancelling_song_is_not_called_mono_safe(tmp_path: Path) -> None:
         ],
         check=True,
     )
-    tools = FFmpegToolchain(ffmpeg, _VENDOR / "ffprobe.exe")
-    report = check_output(tools, song, cancel=threading.Event())
+    report = check_output(_TOOLS, song, cancel=threading.Event())
     # The gated mono-loudness estimate called this +0.79 and mono-safe
     assert report.correlation == pytest.approx(-0.2, abs=0.02)
     assert not report.mono_safe

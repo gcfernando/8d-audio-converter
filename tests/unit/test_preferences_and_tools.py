@@ -209,11 +209,94 @@ def test_saved_logs_can_be_deleted_while_the_log_is_open(
 # ------------------------------------------------------------ playback
 
 
+class _MCI:
+    """A deterministic WinMM boundary, not a replacement for Player's logic."""
+
+    def __init__(self):
+        self.commands = []
+        self.mode = STOPPED
+        self.fail = None
+
+    def mciSendStringW(self, command, buffer, _size, _callback):
+        self.commands.append(command)
+        verb = command.split()[0]
+        if verb == self.fail:
+            return 1
+        if verb in ("play", "resume"):
+            self.mode = PLAYING
+        elif verb == "pause":
+            self.mode = PAUSED
+        elif verb in ("stop", "close"):
+            self.mode = STOPPED
+        elif verb == "status":
+            buffer.value = {"mode": self.mode, "position": "1250", "length": "3000"}[
+                command.split()[-1]
+            ]
+        return 0
+
+    def mciGetErrorStringW(self, _code, buffer, _size):
+        buffer.value = "Audio device unavailable"
+        return True
+
+
+def test_the_player_plays_pauses_resumes_and_stops(tmp_path: Path) -> None:
+    file = tmp_path / "a song.mp3"
+    file.touch()
+    backend = _MCI()
+    player = Player(muted=True)
+    player._winmm = backend
+    player.load(file)
+    assert player.built_in
+    alias = player._alias
+    assert backend.commands == [
+        f'open "{file}" type mpegvideo alias {alias}',
+        f"set {alias} time format milliseconds",
+        f"setaudio {alias} volume to 0",
+    ]
+    player.play(from_start=True)
+    assert backend.commands[-1] == f"play {alias} from 0"
+    assert player.state() == PLAYING
+    player.pause()
+    assert player.state() == PAUSED
+    player.resume()
+    assert player.state() == PLAYING
+    assert player.position() == (1.25, 3.0)
+    player.stop()
+    assert backend.commands[-2:] == [f"stop {alias}", f"seek {alias} to start"]
+    assert player.state() == STOPPED
+    player.close()
+    assert backend.commands[-1] == f"close {alias}"
+    assert player.file is None and player._alias is None
+    assert player.position() == (0.0, 0.0)
+
+
+@pytest.mark.parametrize("available", [False, True])
+def test_missing_or_failed_audio_device_uses_the_external_player(
+    tmp_path: Path, monkeypatch, available: bool
+) -> None:
+    file = tmp_path / "a song.mp3"
+    backend = _MCI()
+    backend.fail = "open"
+    player = Player()
+    player._winmm = backend if available else None
+    opened = []
+    monkeypatch.setattr("src.player.open_path", opened.append)
+    player.load(file)
+    assert not player.built_in and player._alias is None
+    player.play(from_start=True)
+    assert opened == [file]
+    assert player.state() == STOPPED
+    player.close()
+
+
 @pytest.mark.skipif(os.name != "nt", reason="built-in playback is Windows-only")
-def test_the_player_plays_pauses_resumes_and_stops(stereo_tone: Path) -> None:
+def test_real_windows_audio_device_can_play_when_available(stereo_tone: Path) -> None:
+    """Optional hardware smoke; the MCI protocol is covered without hardware above."""
     player = Player(muted=True)
     player.load(stereo_tone)
-    assert player.built_in
+    if not player.built_in:
+        player.close()
+        pytest.skip("Windows MCI could not initialize an audio playback device")
     player.play(from_start=True)
     assert player.state() == PLAYING
     player.pause()

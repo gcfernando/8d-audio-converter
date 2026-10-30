@@ -30,4 +30,6 @@ Audio8D's code has an [MIT license](../LICENSE). Bundled FFmpeg uses GPLv3 and o
 
 ## Verification status
 
-This configuration must first be pushed through an authorized repository change before a GitHub-hosted run and published downloads can be observed. Local checks and static workflow validation do not demonstrate a successful remote run. Use the [releases index](https://github.com/gcfernando/8d-audio-converter/releases) and [workflow runs](https://github.com/gcfernando/8d-audio-converter/actions/workflows/release.yml) to inspect actual results.
+Use the [releases index](https://github.com/gcfernando/8d-audio-converter/releases) and [workflow runs](https://github.com/gcfernando/8d-audio-converter/actions/workflows/release.yml) to inspect actual published downloads and their source/build evidence. Local checks and static workflow validation alone do not establish a successful remote run.
+
+The full test suite runs on both native platforms before publication. GUI control and player-state tests isolate playback devices so hosted runners without audio hardware can still verify those behaviors. Maximized-window tests require an actual supported window-manager state; ordinary popup geometry remains covered on every GUI runner. Physical playback, perceived audio quality and clean-machine desktop acceptance remain separate manual checks.

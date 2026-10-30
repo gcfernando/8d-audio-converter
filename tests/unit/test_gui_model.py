@@ -543,8 +543,11 @@ def test_songs_that_would_share_a_name_get_their_own() -> None:
 
     names = [item.output.name for item in items_for(settings, songs)]
 
-    assert names == ["Intro (8D).mp3", "Intro (8D) (2).mp3", "intro (8D) (3).mp3"]
-    assert name_clashes(settings, songs) == 2
+    # Case-only names collide on Windows; POSIX paths remain distinct on Linux.
+    ignores_case = os.path.normcase("Intro") == os.path.normcase("intro")
+    third = "intro (8D) (3).mp3" if ignores_case else "intro (8D).mp3"
+    assert names == ["Intro (8D).mp3", "Intro (8D) (2).mp3", third]
+    assert name_clashes(settings, songs) == (2 if ignores_case else 1)
     settings.destination = ""
     assert name_clashes(settings, songs) == 0
 

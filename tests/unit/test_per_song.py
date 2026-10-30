@@ -61,7 +61,8 @@ def test_songs_match_by_name_bare_name_pattern_or_path(tmp_path: Path) -> None:
     for pattern in ("Rain Study.mp3", "rain study", "rain*", "*.MP3"):
         rule = parse_line(f'"{pattern}" --intensity 0.5', 1, tmp_path)
         assert rule is not None and rule.matches(song), pattern
-    by_path = parse_line('"Music\\Rain Study.mp3" --intensity 0.5', 1, tmp_path)
+    relative = Path("Music") / "Rain Study.mp3"
+    by_path = parse_line(f'"{relative}" --intensity 0.5', 1, tmp_path)
     assert by_path is not None and by_path.matches(song)
     other = parse_line('"Storm Wall.flac" --intensity 0.5', 1, tmp_path)
     assert other is not None and not other.matches(song)

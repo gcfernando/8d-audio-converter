@@ -4,7 +4,7 @@ Audio8D is a Python desktop application and command-line tool that uses FFmpeg t
 
 [![Repository standards](https://github.com/gcfernando/8d-audio-converter/actions/workflows/repository-standards.yml/badge.svg)](https://github.com/gcfernando/8d-audio-converter/actions/workflows/repository-standards.yml)
 
-Choose music, select a sound style, listen to a preview and create a new file. The original files are kept. Audio8D is for listeners who want to experiment with spatial movement and for people converting several songs from a desktop window or terminal. The perceived effect varies with the recording, headphones and listener.
+Choose music, select a sound style, listen to a preview and create a new file. The original files are kept by default. Audio8D is for listeners who want to experiment with spatial movement and for people converting several songs from a desktop window or terminal. The perceived effect varies with the recording, headphones and listener.
 
 ## Features
 
@@ -20,7 +20,7 @@ The [desktop user guide](docs/user-guide.md) includes the remaining screenshots 
 
 ## Download and quick start
 
-The repository currently includes these portable packages:
+Choose a checked application build from the [GitHub Releases page](https://github.com/gcfernando/8d-audio-converter/releases). Each complete release includes Windows and Linux ZIPs plus **SHA256SUMS.txt**. GitHub's source-code archives do not contain the built application. The repository also retains these earlier portable packages:
 
 | System | Download | Launch after extracting the entire ZIP |
 | --- | --- | --- |
@@ -29,7 +29,7 @@ The repository currently includes these portable packages:
 
 Keep all companion files together. These packages bundle Python and FFmpeg; a separate Python installation is unnecessary for ordinary conversion. Linux desktop playback needs an available desktop/audio environment. The packages are **unsigned**. macOS build code exists, but macOS remains untested and no macOS download is offered here.
 
-New automation is configured to publish checked Windows and Linux packages to the [GitHub Releases page](https://github.com/gcfernando/8d-audio-converter/releases) after successful pushes to `main`. The release page has no published application release yet at the time this workflow is introduced. Until its first successful authorized run, use the tracked packages above or build from source. Each future release supplies `SHA256SUMS.txt`; verify the ZIP against the manifest from the same release. GitHub source-code archives do not contain the built application.
+The release workflow publishes checked Windows and Linux packages after successful pushes to `main`. Verify each ZIP against **SHA256SUMS.txt** from the same release before extracting. If a build fails, use a complete earlier release, the retained packages above or a source checkout; failed builds do not publish partial releases. The application version remains **1.0.0**, with separate build tags identifying automated downloads.
 
 In the window:
 
