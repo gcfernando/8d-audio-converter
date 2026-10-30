@@ -118,3 +118,40 @@ def test_stray_macos_folder_files_are_refused(tmp_path: Path) -> None:
 
     with pytest.raises(build_release.BuildError, match="developer files"):
         build_release.check_contents(archive)
+
+
+def test_packaged_documentation_keeps_local_guides_and_links_source_online(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root = tmp_path / "source"
+    (root / "packaging").mkdir(parents=True)
+    (root / "packaging" / "requirements-build.txt").write_text("dependency")
+    folder = tmp_path / "package"
+    (folder / "docs").mkdir(parents=True)
+    (folder / "docs" / "guide.md").write_text("# Guide")
+    readme = folder / "README.md"
+    readme.write_text(
+        "[Guide](docs/guide.md) [Build](packaging/requirements-build.txt) "
+        "[Web](https://example.com/guide) [Section](#start)",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(build_release, "ROOT", root)
+    build_release.documentation_links(folder)
+    text = readme.read_text(encoding="utf-8")
+    assert "[Guide](docs/guide.md)" in text
+    assert (
+        "https://github.com/gcfernando/8d-audio-converter/"
+        "blob/main/packaging/requirements-build.txt"
+    ) in text
+    assert "[Web](https://example.com/guide) [Section](#start)" in text
+
+
+def test_packaged_documentation_rejects_missing_source_target(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    folder = tmp_path / "package"
+    folder.mkdir()
+    (folder / "README.md").write_text("[Missing](missing.md)", encoding="utf-8")
+    monkeypatch.setattr(build_release, "ROOT", tmp_path / "source")
+    with pytest.raises(build_release.BuildError, match="Missing documentation target"):
+        build_release.documentation_links(folder)

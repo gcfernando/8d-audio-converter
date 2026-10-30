@@ -1,0 +1,101 @@
+name: Build and release Audio8D
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+# Every push is independent; never discard an earlier main run through concurrency.
+jobs:
+  packages:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            platform: windows-x86_64
+            python: '3.12'
+          - os: ubuntu-22.04
+            platform: linux-x86_64
+            python: '3.10'
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          lfs: true
+          persist-credentials: false
+      - uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Linux desktop test dependencies
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install --yes python3-tk xvfb
+      - name: Install development dependencies
+        run: python -m pip install -e ".[gui,dev]" -r packaging/requirements-build.txt
+      - name: Repository and publication policy checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          python .github/scripts/check_repository.py
+          python -m unittest discover -s .github/scripts -p test_publish_main_release.py -v
+      - name: Build and verify native application package
+        run: python packaging/build_release.py
+      - name: Expose the verified Linux FFmpeg to tests
+        if: runner.os == 'Linux'
+        shell: bash
+        run: echo "$GITHUB_WORKSPACE/build/ffmpeg/linux-x86_64" >> "$GITHUB_PATH"
+      - name: Windows converter and GUI tests
+        if: runner.os == 'Windows'
+        run: python -m pytest
+      - name: Linux converter and GUI tests
+        if: runner.os == 'Linux'
+        run: xvfb-run --auto-servernum python -m pytest
+      - name: Stage only this platform's package
+        shell: python
+        env:
+          PACKAGE_PLATFORM: ${{ matrix.platform }}
+        run: |
+          import os, pathlib, re, shutil
+          root = pathlib.Path('.')
+          version = re.search(r'^version\s*=\s*"([^"]+)"', (root / 'pyproject.toml').read_text(), re.M)[1]
+          package = root / 'bin' / f'Audio8D-{version}-{os.environ["PACKAGE_PLATFORM"]}.zip'
+          if not package.is_file():
+              raise SystemExit('The expected verified package is missing')
+          staging = root / 'artifacts' / 'release'
+          staging.mkdir(parents=True)
+          shutil.copy2(package, staging / package.name)
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: Audio8D-${{ matrix.platform }}
+          path: artifacts/release/*.zip
+          if-no-files-found: error
+          retention-days: 30
+  publish-main:
+    needs: packages
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          pattern: Audio8D-*
+          merge-multiple: true
+          path: artifacts/main-download
+      - name: Publish both verified platform packages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
+          python .github/scripts/publish_main_release.py --project Audio8D --version "$version" artifacts/main-download/*.zip

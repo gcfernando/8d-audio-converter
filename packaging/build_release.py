@@ -26,6 +26,7 @@ import subprocess
 import sys
 import tarfile
 import tempfile
+import urllib.parse
 import urllib.request
 import venv
 import zipfile
@@ -53,7 +54,14 @@ MAC_FFMPEG = {
     ),
 }
 # What travels with the programs in every package
-EXTRAS = ("README.md", "THIRD-PARTY-NOTICES.md", "licenses")
+EXTRAS = (
+    "README.md",
+    "LICENSE",
+    "THIRD-PARTY-NOTICES.md",
+    "licenses",
+    "docs",
+    "documentation.md",
+)
 # The pinned build tools and bundled libraries, matching THIRD-PARTY-NOTICES.md
 REQUIREMENTS = ROOT / "packaging" / "requirements-build.txt"
 
@@ -308,6 +316,46 @@ HOW_TO_RUN = {
 }
 
 
+def documentation_links(folder: Path) -> None:
+    """Keep shipped guides local and point source-only links at the repository."""
+    for document in folder.rglob("*.md"):
+        original = ROOT / document.relative_to(folder)
+
+        def replace(
+            match: re.Match[str], document: Path = document, original: Path = original
+        ) -> str:
+            target = match.group(2)
+            if target.startswith(("#", "/")) or re.match(
+                r"^[A-Za-z][A-Za-z0-9+.-]*:", target
+            ):
+                return match.group(0)
+            name, separator, fragment = target.partition("#")
+            decoded = urllib.parse.unquote(name)
+            if (document.parent / decoded).exists():
+                return match.group(0)
+            source = (original.parent / decoded).resolve()
+            try:
+                relative = source.relative_to(ROOT.resolve())
+            except ValueError as exc:
+                raise BuildError(
+                    "A packaged documentation link leaves the repository"
+                ) from exc
+            if not source.exists():
+                raise BuildError(f"Missing documentation target: {target}")
+            kind = "tree" if source.is_dir() else "blob"
+            encoded = urllib.parse.quote(relative.as_posix())
+            suffix = separator + fragment if separator else ""
+            url = (
+                "https://github.com/gcfernando/8d-audio-converter/"
+                f"{kind}/main/{encoded}{suffix}"
+            )
+            return match.group(1) + url + match.group(3)
+
+        text = document.read_text(encoding="utf-8")
+        text = re.sub(r"(\[[^\]\r\n]*\]\()([^\s\)]+)(\))", replace, text)
+        document.write_text(text, encoding="utf-8", newline="\n")
+
+
 def stage(dist: Path, tag: str) -> Path:
     """The folder that goes into the ZIP: the programs plus the guide and licences."""
     system = tag.split("-", 1)[0]
@@ -331,6 +379,13 @@ def stage(dist: Path, tag: str) -> Path:
         else:
             shutil.copy2(source, target)
     (folder / "HOW TO RUN.txt").write_text(HOW_TO_RUN[system], encoding="utf-8")
+    (folder / "BUILD-INFO.txt").write_text(
+        f"Audio8D {project_version()}\nPlatform: {tag}\n"
+        f"Python: {sys.version.split()[0]}\n"
+        f"Source commit: {os.environ.get('GITHUB_SHA', 'local build')}\n",
+        encoding="utf-8",
+    )
+    documentation_links(folder)
     return folder
 
 

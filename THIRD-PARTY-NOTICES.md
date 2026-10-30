@@ -9,7 +9,7 @@ Paths below are relative to the `Audio8D` folder you unzipped. On macOS the same
 | Component | Version | Licence | Where it is | Licence text |
 |---|---|---|---|---|
 | **FFmpeg** and **FFprobe** (see [FFmpeg source code](#ffmpeg-source-code) for the build used on each system) | Windows: 9.0.2; Linux: 7.0.2 | GNU General Public License v3 (built with `--enable-gpl --enable-version3`) | `_internal\ffmpeg.exe`, `_internal\ffprobe.exe` (`_internal/ffmpeg`, `_internal/ffprobe` on Linux) | `licenses/FFmpeg-GPL-3.0.txt` |
-| **Python** (with Tcl/Tk and the libraries listed in its licence) | Windows: 3.12.10; Linux: 3.10.12 | Python Software Foundation License | `_internal` | `licenses/Python-LICENSE.txt` |
+| **Python** (with Tcl/Tk and the libraries listed in its licence) | Original repository ZIPs: Windows 3.12.10; Linux 3.10.12. New builds: see BUILD-INFO.txt | Python Software Foundation License | `_internal` | `licenses/Python-LICENSE.txt` |
 | **CustomTkinter** | 6.0.0 | MIT | inside the programs and `_internal\customtkinter` | `licenses/CustomTkinter-LICENSE.txt` |
 | **darkdetect** (used by CustomTkinter) | 0.8.0 | BSD 3-Clause | inside the programs | `licenses/darkdetect-LICENSE.txt` |
 | **packaging** (used by CustomTkinter) | 26.3 | Apache 2.0 or BSD 2-Clause | inside the programs | `licenses/packaging-LICENSE.txt`, `licenses/packaging-LICENSE.APACHE.txt` |
