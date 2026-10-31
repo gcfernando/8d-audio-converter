@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib.util
 import json
 import os
 import re
@@ -11,6 +12,7 @@ import sys
 import urllib.error
 import urllib.parse
 import urllib.request
+import zipfile
 from pathlib import Path
 
 
@@ -145,7 +147,13 @@ def find_release(api, tag: str, encoded_tag: str):
 
 
 def publish(
-    api, environment: dict[str, str], project: str, version: str, packages: list[Path]
+    api,
+    environment: dict[str, str],
+    project: str,
+    version: str,
+    packages: list[Path],
+    *,
+    signed_windows: bool = False,
 ):
     repository, commit, run, tag, marker = identity(environment, version)
     expected = {"Aster": 1, "Audio8D": 2}
@@ -166,6 +174,32 @@ def publish(
     for package in packages:
         if not package.is_file() or package.stat().st_size <= 0:
             raise ReleaseError("A required package is missing or empty")
+    if signed_windows:
+        if project != "Audio8D":
+            raise ReleaseError("Windows signing evidence is supported only for Audio8D")
+        helper_path = (
+            Path(__file__).resolve().parents[2] / "packaging" / "sign_release.py"
+        )
+        specification = importlib.util.spec_from_file_location(
+            "audio8d_sign_release", helper_path
+        )
+        helper = importlib.util.module_from_spec(specification)
+        specification.loader.exec_module(helper)
+        try:
+            helper.verify_signed_archive(
+                next(p for p in packages if "-windows-" in p.name)
+            )
+        except (
+            OSError,
+            ValueError,
+            KeyError,
+            TypeError,
+            RuntimeError,
+            zipfile.BadZipFile,
+        ) as exc:
+            raise ReleaseError(
+                "Signed Windows package evidence failed validation"
+            ) from exc
     checksum = packages[0].parent / "SHA256SUMS.txt"
     checksum.write_text(
         "".join(f"{sha256(package)}  {package.name}\n" for package in sorted(packages)),
@@ -184,6 +218,11 @@ def publish(
             or marker not in release.get("body", "")
             or release.get("target_commitish") != commit
             or release.get("prerelease") is not True
+            or (
+                "Signing status: Windows frontends Authenticode signed."
+                in release.get("body", "")
+            )
+            != signed_windows
         ):
             raise ReleaseError("Refusing to modify a release not owned by this push")
         if not release.get("draft"):
@@ -206,12 +245,28 @@ def publish(
         "are bundled. FFmpeg and the bundled libraries retain their own licenses; "
         "see THIRD-PARTY-NOTICES.md and licenses/ in the package. macOS is not built."
     )
+    signing_notes = (
+        "Signing status: Windows frontends Authenticode signed. "
+        "The two Audio8D Windows frontends (Audio8D.exe and audio8d-cli.exe) have "
+        "trusted, timestamped Authenticode signatures verified on Windows. "
+        "Bundled third-party programs, including FFmpeg, "
+        "are not signed by this project. "
+        "The Linux package is unsigned. signing-manifest.json records Windows signing "
+        "and final file-integrity evidence; the Linux publication job checks those "
+        "hashes and metadata, not Windows cryptographic trust. Signing does not "
+        "guarantee SmartScreen reputation or eliminate security warnings."
+        if signed_windows
+        else "These are **unsigned automated preview builds**. "
+        "They are not signed or notarized. "
+        "Windows may show Unknown publisher / SmartScreen until a trusted signing "
+        "identity and reputation are established. "
+        "Signing support alone does not remove this warning."
+    )
     notes = (
         f"{marker}\n\nBuilt from main commit [{commit}]"
         f"(https://github.com/{repository}/commit/{commit}).\n\n"
         f"[Required checks and package verification](https://github.com/{repository}/actions/runs/{run}).\n\n"
-        f"{instructions}\n\nThese are **unsigned automated preview builds**. "
-        "They are not signed or notarized. SHA256SUMS.txt records each application "
+        f"{instructions}\n\n{signing_notes} SHA256SUMS.txt records each application "
         "ZIP's SHA-256 checksum. Source-code archives are not runnable downloads.\n\n"
         f"Release identity: `{tag}`. Application base version: `{version}`. "
         "Each successful main push keeps its own release; reruns retain an already "
@@ -274,6 +329,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--project", required=True, choices=("Aster", "Audio8D"))
     parser.add_argument("--version", required=True)
+    parser.add_argument("--signed-windows", action="store_true")
     parser.add_argument("packages", nargs="+", type=Path)
     args = parser.parse_args()
     try:
@@ -287,6 +343,7 @@ def main() -> int:
             args.project,
             args.version,
             args.packages,
+            signed_windows=args.signed_windows,
         )
         print(f"{status}: {url}")
         if summary := os.environ.get("GITHUB_STEP_SUMMARY"):

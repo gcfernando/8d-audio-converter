@@ -267,6 +267,10 @@ class Audio8DApp(  # pylint: disable=too-many-instance-attributes
 
     def __init__(self, songs: Sequence[Path] = ()) -> None:
         """Build everything and show step 1."""
+        self._closing = False
+        self._destroyed = False
+        self._warming_dialogs = False
+        self._handling_error = False
         self.preferences, preferences_problem = load_preferences()
         ctk.set_appearance_mode(self.preferences.theme)
         ctk.set_widget_scaling(self.preferences.scale)
@@ -385,12 +389,33 @@ class Audio8DApp(  # pylint: disable=too-many-instance-attributes
         tk.Misc.bind_all(self, "<KeyPress>", self._touched, "+")
         tk.Misc.bind_all(self, "<ButtonPress>", self._touched, "+")
         self._warm = ["styles_step", "output", "review", "settings", "styles"]
-        self.after(1500, self._warm_up)
-        self.after(2500, self._warm_dialogs)
+        self._when_alive(1500, self._warm_up)
+        self._when_alive(2500, self._warm_dialogs)
         self.after(80, self._poll)
         # Tk objects freed on a helper thread block it on Tcl, so only collect here
         gc.disable()
-        self.after(GC_INTERVAL_MS, self._collect_garbage)
+        self._when_alive(GC_INTERVAL_MS, self._collect_garbage)
+
+    def _when_alive(self, delay: int, callback: Callable, *args: object) -> str | None:
+        """Run deferred GUI work only while its window is alive.
+
+        CustomTkinter constructors can pump nested events on Windows. Closing
+        during that update destroys Tk before the constructor returns, so an
+        already running callback needs the same shutdown check as pending work.
+        """
+        if self._closed():
+            return None
+
+        def run() -> None:
+            if self._closed():
+                return
+            try:
+                callback(*args)
+            except tk.TclError:
+                if not self._closed():
+                    raise
+
+        return self.after(delay, run)
 
     def _touched(self, _event: object = None) -> None:
         """The user pressed a key or clicked: warming up waits."""
@@ -403,31 +428,33 @@ class Audio8DApp(  # pylint: disable=too-many-instance-attributes
         made and drawn once off-screen while nobody is using the window. Visiting
         it or opening its folded parts later is then quick.
         """
-        if not self._warm or not self.winfo_exists():
+        if self._closed() or not self._warm:
             return
         idle = time.perf_counter() - self._last_input > WARM_IDLE_SECONDS
         if not idle or self.busy or self._reading_count():
-            self.after(700, self._warm_up)
+            self._when_alive(700, self._warm_up)
             return
         key = self._warm[0]
         if key == self.current:
             # A page on screen can't be prepared out of sight; come back later
             self._warm.append(self._warm.pop(0))
-            self.after(1500, self._warm_up)
+            self._when_alive(1500, self._warm_up)
             return
         self._warm.pop(0)
         page = self.pages[key]
         # First drawn in place, underneath the page on screen…
         page.grid(row=0, column=0, sticky="nsew")
         page._parent_frame.lower()  # pylint: disable=protected-access
-        self.after(400, lambda: self._warm_off_screen(key))
+        self._when_alive(400, self._warm_off_screen, key)
 
     def _warm_off_screen(self, key: str) -> None:
         """…then moved out of sight, where its folded parts are opened once."""
+        if self._closed():
+            return
         page = self.pages[key]
         if key == self.current or time.perf_counter() - self._last_input < 0.4:
             # Shown (or asked for) meanwhile: leave it be
-            self.after(250, self._warm_up)
+            self._when_alive(250, self._warm_up)
             return
         page.grid_forget()
         width, height = self.content.winfo_width(), self.content.winfo_height()
@@ -444,10 +471,12 @@ class Audio8DApp(  # pylint: disable=too-many-instance-attributes
             for section in getattr(page, "warm_sections", list)()
             if not section.opened
         ]
-        self.after(120, lambda: self._warm_sections(key, sections))
+        self._when_alive(120, self._warm_sections, key, sections)
 
     def _warm_sections(self, key: str, sections: list[Section]) -> None:
         """Open each folded part off-screen once, then put the page away."""
+        if self._closed():
+            return
         page_frame = self.pages[key]._parent_frame  # pylint: disable=protected-access
         if sections and key != self.current and page_frame.winfo_manager() == "place":
             section = sections.pop(0)
@@ -458,38 +487,56 @@ class Audio8DApp(  # pylint: disable=too-many-instance-attributes
                     section.toggle()
                 self._warm_sections(key, sections)
 
-            self.after(300, close)
+            self._when_alive(300, close)
             return
         frame = self.pages[key]._parent_frame  # pylint: disable=protected-access
         if key != self.current and frame.winfo_manager() == "place":
             tk.Place.place_forget(frame)
-        self.after(250, self._warm_up)
+        self._when_alive(250, self._warm_up)
 
     def _warm_dialogs(self) -> None:
         """Make the style chooser and Customize dialog out of sight while idle.
 
         They are then only shown when asked for, so they open at once.
         """
-        if not self.winfo_exists():
+        if self._closed() or self._warming_dialogs:
             return
         idle = time.perf_counter() - self._last_input > WARM_IDLE_SECONDS
         if not idle or self.busy or self._reading_count():
-            self.after(700, self._warm_dialogs)
+            self._when_alive(700, self._warm_dialogs)
             return
-        if self.chooser is None:
-            self.chooser = StyleChooser(self)
-            self.chooser.build_cards()
-            self.after(400, self._warm_dialogs)
-        elif self.customize is None:
-            self.customize = CustomizeDialog(self)
+        self._warming_dialogs = True
+        try:
+            if self.chooser is None:
+                chooser = StyleChooser(self)
+                if self._closed():
+                    return
+                self.chooser = chooser
+                chooser.build_cards()
+                self._when_alive(400, self._warm_dialogs)
+            elif self.customize is None:
+                customize = CustomizeDialog(self)
+                if not self._closed():
+                    self.customize = customize
+        except tk.TclError:
+            if not self._closed():
+                raise
+        finally:
+            self._warming_dialogs = False
 
     def _collect_garbage(self) -> None:
         """Free cyclic garbage on the window's own thread, a few times a minute."""
+        if self._closed():
+            return
         gc.collect()
-        self.after(GC_INTERVAL_MS, self._collect_garbage)
+        self._when_alive(GC_INTERVAL_MS, self._collect_garbage)
 
     def destroy(self) -> None:
         """Close the window and hand garbage collection back to Python."""
+        if self._destroyed:
+            return
+        self._closing = True
+        self._destroyed = True
         gc.enable()
         # Timers still waiting would fire into a closed window and print Tcl errors
         try:
@@ -598,11 +645,17 @@ class Audio8DApp(  # pylint: disable=too-many-instance-attributes
         tb: TracebackType | None,
     ) -> None:
         """A surprise inside a button or event: log it and explain, never go silent."""
+        if self._closed():
+            if not self._closing:
+                LOG.error("Callback failed after Tk closed", exc_info=(exc, val, tb))
+            return
         LOG.error("Unexpected problem in the window", exc_info=(exc, val, tb))
         self._show_error(val)
 
     def close(self) -> None:
         """Closing the window mid-conversion: ask first, then stop cleanly."""
+        if self._closed():
+            return
         if self.busy:
             if not Dialog.confirm(
                 self,
@@ -627,24 +680,29 @@ class Audio8DApp(  # pylint: disable=too-many-instance-attributes
                 icon="stop",
             ):
                 return
-        self.addon_cancel.set()
-        # Defaults changed a moment ago are saved now, not lost with the window
-        if getattr(self, "_remember_job", None):
-            self.after_cancel(self._remember_job)  # type: ignore[arg-type]
-            self._save_defaults()
-        self.read_generation += 1
-        self.player.close()
-        self.previews.close()
-        # Any FFmpeg, pip or Demucs still running is stopped, never left behind
-        kill_all_processes()
-        # Give the stopped conversion a moment to delete its half-made files
-        worker = self.convert_thread
-        if worker is not None and worker.is_alive():
-            worker.join(CLOSE_WAIT_SECONDS)
-            if worker.is_alive():
-                LOG.warning("Closed before the stopped conversion finished tidying up")
-        logging.getLogger().removeHandler(self.log_handler)
-        self.destroy()
+        self._closing = True
+        try:
+            self.addon_cancel.set()
+            # Defaults changed a moment ago are saved now, not lost with the window
+            if getattr(self, "_remember_job", None):
+                self.after_cancel(self._remember_job)  # type: ignore[arg-type]
+                self._save_defaults()
+            self.read_generation += 1
+            self.player.close()
+            self.previews.close()
+            # Any FFmpeg, pip or Demucs still running is stopped, never left behind
+            kill_all_processes()
+            # Give the stopped conversion a moment to delete its half-made files
+            worker = self.convert_thread
+            if worker is not None and worker.is_alive():
+                worker.join(CLOSE_WAIT_SECONDS)
+                if worker.is_alive():
+                    LOG.warning(
+                        "Closed before the stopped conversion finished tidying up"
+                    )
+        finally:
+            logging.getLogger().removeHandler(self.log_handler)
+            self.destroy()
 
     # ------------------------------------------------------------ small helpers
 
@@ -850,6 +908,8 @@ class Audio8DApp(  # pylint: disable=too-many-instance-attributes
     # One place that turns every kind of helper-thread news into window changes
     def _poll(self) -> None:
         """Apply what the helper threads reported, then look again shortly."""
+        if self._closed():
+            return
         try:
             self._apply_events()
             self._tick()
@@ -862,6 +922,8 @@ class Audio8DApp(  # pylint: disable=too-many-instance-attributes
 
     def _closed(self) -> bool:
         """True once the window has been closed."""
+        if self._closing:
+            return True
         try:
             return not self.winfo_exists()
         except tk.TclError:
@@ -961,6 +1023,8 @@ class Audio8DApp(  # pylint: disable=too-many-instance-attributes
 
     def _show_error(self, error: BaseException) -> None:
         """A problem from the work thread: a plain headline, the fix, the details."""
+        if self._closed() or self._handling_error:
+            return
         fix = hints.fix_for(error) if isinstance(error, Audio8DError) else None
         LOG.error("%s", error)
         message = gui_words(hints.headline(error))
@@ -969,14 +1033,28 @@ class Audio8DApp(  # pylint: disable=too-many-instance-attributes
         details = "".join(
             traceback.format_exception(type(error), error, error.__traceback__)
         )
-        ErrorDialog(self, message, f"{type(error).__name__}: {error}\n\n{details}")
+        self._handling_error = True
+        try:
+            ErrorDialog(self, message, f"{type(error).__name__}: {error}\n\n{details}")
+        except Exception:  # pylint: disable=broad-exception-caught
+            # Error reporting must never create another callback exception or
+            # turn an ordinary close into the launcher's "could not open" box.
+            if not self._closed():
+                LOG.exception("Could not display the error dialog")
+        finally:
+            self._handling_error = False
 
 
 def launch(songs: Sequence[Path] = ()) -> int:
     """Open the window and wait until it is closed."""
     app = Audio8DApp(songs)
+    # The explicit packaging diagnostic uses the same entry point and idle work
+    # as ordinary launches. Normal launches install no probe or test callbacks.
+    from .gui_smoke import install  # pylint: disable=import-outside-toplevel
+
+    probe = install(app)
     app.mainloop()
-    return 0
+    return probe.finish() if probe is not None else 0
 
 
 __all__ = ["Audio8DApp", "launch"]

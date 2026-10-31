@@ -4,6 +4,7 @@ import copy
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 import publish_main_release as release
 
@@ -199,6 +200,52 @@ class PublicationTests(unittest.TestCase):
         with self.assertRaises(release.ReleaseError):
             release.publish(self.api, ENV, "Audio8D", "1.0.0", [self.package])
         self.assertEqual(self.api.calls, [])
+
+    def test_signed_flag_is_restricted_to_audio8d(self):
+        with self.assertRaises(release.ReleaseError):
+            release.publish(
+                self.api, ENV, "Aster", "1.0.0", [self.package], signed_windows=True
+            )
+        self.assertEqual(self.api.calls, [])
+
+    def test_signed_windows_requires_real_evidence_before_any_api_call(self):
+        packages = [
+            Path(self.temp.name) / f"Audio8D-1.0.0-{platform}-x86_64.zip"
+            for platform in ("windows", "linux")
+        ]
+        for package in packages:
+            package.write_bytes(b"not a signed archive")
+        with self.assertRaises(release.ReleaseError):
+            release.publish(
+                self.api, ENV, "Audio8D", "1.0.0", packages, signed_windows=True
+            )
+        self.assertEqual(self.api.calls, [])
+
+    def test_signed_release_notes_distinguish_windows_linux_and_thirdparty(self):
+        packages = [
+            Path(self.temp.name) / f"Audio8D-1.0.0-{platform}-x86_64.zip"
+            for platform in ("windows", "linux")
+        ]
+        for package in packages:
+            package.write_bytes(b"mock validated evidence")
+        # This tests publication policy only, not certificates or ZIP integrity.
+        with patch.object(release.importlib.util, "module_from_spec") as module:
+            module.return_value.verify_signed_archive.return_value = {
+                "publisher": "Mock metadata"
+            }
+            with patch.object(release.importlib.util, "spec_from_file_location"):
+                release.publish(
+                    self.api, ENV, "Audio8D", "1.0.0", packages, signed_windows=True
+                )
+        notes = self.api.release["body"]
+        self.assertIn("The Linux package is unsigned", notes)
+        self.assertIn("not Windows cryptographic trust", notes)
+        self.assertIn("FFmpeg", notes)
+        self.assertIn("does not guarantee SmartScreen", notes)
+        self.api.calls.clear()
+        with self.assertRaises(release.ReleaseError):
+            release.publish(self.api, ENV, "Audio8D", "1.0.0", packages)
+        self.assertTrue(all(call[0] == "GET" for call in self.api.calls))
 
 
 if __name__ == "__main__":

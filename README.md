@@ -27,7 +27,7 @@ Choose a checked application build from the [GitHub Releases page](https://githu
 | Windows x86_64 | [Audio8D 1.0.0 for Windows](https://github.com/gcfernando/8d-audio-converter/raw/refs/heads/main/bin/Audio8D-1.0.0-windows-x86_64.zip) | `Audio8D\Audio8D.exe` |
 | Linux x86_64 | [Audio8D 1.0.0 for Linux](https://github.com/gcfernando/8d-audio-converter/raw/refs/heads/main/bin/Audio8D-1.0.0-linux-x86_64.zip) | `./Audio8D/Audio8D` |
 
-Keep all companion files together. These packages bundle Python and FFmpeg; a separate Python installation is unnecessary for ordinary conversion. Linux desktop playback needs an available desktop/audio environment. The packages are **unsigned**. macOS build code exists, but macOS remains untested and no macOS download is offered here.
+Keep all companion files together. These packages bundle Python and FFmpeg; a separate Python installation is unnecessary for ordinary conversion. Linux desktop playback needs an available desktop/audio environment. Packages are **unsigned** unless a release explicitly identifies trusted signatures on the two Windows frontends; see [signing and SmartScreen](docs/code-signing.md). Linux and unchanged third-party programs are unsigned by this project. macOS build code exists, but macOS remains untested and no macOS download is offered here.
 
 The release workflow publishes checked Windows and Linux packages after successful pushes to `main`. Verify each ZIP against **SHA256SUMS.txt** from the same release before extracting. If a build fails, use a complete earlier release, the retained packages above or a source checkout; failed builds do not publish partial releases. The application version remains **1.0.0**, with separate build tags identifying automated downloads.
 

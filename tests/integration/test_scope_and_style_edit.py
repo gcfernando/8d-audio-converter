@@ -430,6 +430,8 @@ def test_closing_the_window_saves_defaults_changed_a_moment_ago(
     finally:
         logging.getLogger().addHandler(handler)
         app.addon_cancel.clear()
+        # destroy() is mocked above; restore shutdown state for the shared window.
+        app._closing = False
 
     assert load_preferences()[0].output.get("output_format") == "flac"
 

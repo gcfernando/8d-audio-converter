@@ -8,6 +8,16 @@ From the repository root, run `python packaging/build_release.py` with Python 3.
 
 The builder writes `bin/Audio8D-<base-version>-<platform>.zip`. It preserves executable modes in the archive, extracts into a path containing spaces, removes Python from the test `PATH`, checks the extracted CLI version/system check and converts a generated six-second tone using bundled FFmpeg. Do not use `--skip-check` for release candidates. The GUI still needs desktop acceptance on the intended machines.
 
+On Windows, also run the real frozen-GUI lifecycle check:
+
+```powershell
+python packaging/gui_smoke.py bin/Audio8D-1.0.0-windows-x86_64.zip
+```
+
+It extracts a fresh package into a path containing spaces and runs the actual `Audio8D.exe` with no Python on PATH and an isolated profile. It verifies idle startup with background dialog preparation enabled, then reproduces closing during both Style and Customize construction. It retains reports under `artifacts/gui-smoke/`. This is a required Windows workflow gate before artifact upload. If signing is enabled, the signed package passes the same check after repackaging.
+
+The internal `AUDIO8D_GUI_SMOKE_REPORT` and `AUDIO8D_GUI_SMOKE_CASE` variables are only set by this explicit diagnostic harness. A report must be a new file directly inside the isolated `AUDIO8D_HOME`; modes are limited to the three fixed test cases. Normal launches install no probe or automatic-close callbacks. These diagnostics do not change Windows security settings or replace physical desktop acceptance.
+
 ## A release for each main push
 
 [release.yml](https://github.com/gcfernando/8d-audio-converter/actions/workflows/release.yml) runs on every push to `main`, on pull requests and on manual dispatch. It builds on native Windows and Linux runners, runs the converter and GUI test suites, and retains one checked ZIP from each platform. Only a successful **push to main**, with both required platform jobs successful, reaches publication. Pull requests and manual runs only create artifacts.
@@ -20,7 +30,7 @@ Publication creates an owned draft, uploads both packages and `SHA256SUMS.txt`, 
 
 Build jobs use `contents: read`; only the publication job receives `contents: write` through the scoped GitHub token. Checkout credentials are not persisted. Actions are pinned to immutable commits. No personal access token or signing certificate is required by this configuration. Repository policy must allow the token to create tags and releases.
 
-The packages are **unsigned**. The workflow does not provide Windows Authenticode signing, Linux package signatures or macOS notarization. Adding signed distribution requires the relevant certificates/credentials and platform-specific signing and verification steps before release upload. Do not label the current ZIPs as signed.
+Packages remain **unsigned** until a trusted identity is configured. The optional [Windows Authenticode pipeline](code-signing.md) uses a separate main-only OIDC job, validates the publisher, timestamps and unchanged PyInstaller content, then checks the actual signed GUI before publication. Enabled signing failure blocks publication without an unsigned fallback. Linux publisher signatures and macOS notarization are not provided. Signing does not guarantee immediate SmartScreen reputation; do not label unsigned ZIPs as signed.
 
 ## Checksums and third-party notices
 
