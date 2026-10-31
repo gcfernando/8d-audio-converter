@@ -30,6 +30,48 @@ def image(overlay=b"PYINSTALLER-overlay-cookie!", magic=0x20B):
     return bytes(data) + overlay
 
 
+@pytest.mark.parametrize(
+    "enabled,provider,expected",
+    [
+        ("", "", ""),
+        ("false", "", ""),
+        ("true", "", "azure"),
+        ("true", "azure", "azure"),
+        ("true", "signpath", "signpath"),
+        ("false", "signpath", ""),
+        ("", "azure", ""),
+    ],
+)
+def test_one_signing_provider_is_selected_with_backward_compatible_defaults(
+    enabled, provider, expected
+):
+    assert (
+        signing.signing_provider(
+            {"AUDIO8D_SIGNING_ENABLED": enabled, "AUDIO8D_SIGNING_PROVIDER": provider}
+        )
+        == expected
+    )
+
+
+@pytest.mark.parametrize(
+    "enabled,provider",
+    [
+        ("TRUE", "azure"),
+        ("false ", "signpath"),
+        ("yes", "azure"),
+        ("true", "azure,signpath"),
+        ("true", "both"),
+        ("true", "SignPath"),
+        ("false", "unknown"),
+    ],
+)
+def test_invalid_or_ambiguous_signing_configuration_fails_closed(enabled, provider):
+    with pytest.raises(signing.SigningError):
+        signing.signing_provider(
+            {"AUDIO8D_SIGNING_ENABLED": enabled, "AUDIO8D_SIGNING_PROVIDER": provider}
+        )
+
+
 def certificate(data):
     result = bytearray(data)
     result += b"\0" * (-len(result) % 8)
@@ -54,6 +96,100 @@ def staged(tmp_path):
     checksum.write_text(f"{signing.digest(archive.read_bytes())}  {archive.name}\n")
     folder = signing.stage(archive, tmp_path / "payload", checksum)
     return folder, archive, checksum
+
+
+def test_signpath_export_contains_only_original_frontends(staged, tmp_path):
+    folder, _, _ = staged
+    destination = signing.export_signpath_request(folder, tmp_path / "request")
+    assert {
+        p.relative_to(destination).as_posix()
+        for p in destination.rglob("*")
+        if p.is_file()
+    } == set(signing.TARGETS)
+    for name in signing.TARGETS:
+        assert (destination / name).read_bytes() == (folder / name).read_bytes()
+    with pytest.raises(signing.SigningError):
+        signing.export_signpath_request(folder, destination)
+
+
+def test_signpath_export_rejects_changed_staged_input(staged, tmp_path):
+    folder, _, _ = staged
+    (folder / "Audio8D/BUILD-INFO.txt").write_bytes(b"modified")
+    with pytest.raises(signing.SigningError):
+        signing.export_signpath_request(folder, tmp_path / "request")
+    assert not (tmp_path / "request").exists()
+
+
+def signpath_response(folder, directory, change=None):
+    directory.mkdir()
+    archive = directory / "provider-result.zip"
+    with zipfile.ZipFile(archive, "w") as bundle:
+        for name in signing.TARGETS:
+            data = certificate((folder / name).read_bytes())
+            if change == "missing" and name == signing.TARGETS[1]:
+                continue
+            if change == "unsigned" and name == signing.TARGETS[1]:
+                data = (folder / name).read_bytes()
+            if change == "overlay" and name == signing.TARGETS[1]:
+                modified = bytearray(data)
+                modified[1024] ^= 1
+                data = bytes(modified)
+            bundle.writestr(name, data)
+        if change == "extra":
+            bundle.writestr("Audio8D/extra.dll", b"extra")
+        if change == "traversal":
+            bundle.writestr("Audio8D/../escape.exe", b"escape")
+        if change == "duplicate":
+            bundle.writestr(signing.TARGETS[0].upper(), b"duplicate")
+        if change == "symlink":
+            info = zipfile.ZipInfo("Audio8D/link")
+            info.external_attr = (stat.S_IFLNK | 0o777) << 16
+            bundle.writestr(info, "target")
+    if change == "extraarchive":
+        (directory / "extra.zip").write_bytes(b"extra")
+    return directory
+
+
+def test_signpath_import_retains_thirdparty_then_common_finalizer_checks_trust(
+    staged, tmp_path, monkeypatch
+):
+    folder, _, _ = staged
+    response = signpath_response(folder, tmp_path / "result")
+    signing.import_signpath_result(folder, response)
+    assert (
+        folder / "Audio8D/_internal/ffmpeg.exe"
+    ).read_bytes() == b"third party unchanged"
+
+    # Provider output is never sufficient evidence of Windows trust by itself.
+    def reject(*_args):
+        raise signing.SigningError("Mock trust rejection after provider response")
+
+    monkeypatch.setattr(signing, "signature_evidence", reject)
+    with pytest.raises(signing.SigningError, match="trust rejection"):
+        signing.finalize(folder, tmp_path / "signed.zip", "Mock publisher metadata")
+    assert not (tmp_path / "signed.zip").exists()
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        "missing",
+        "unsigned",
+        "overlay",
+        "extra",
+        "traversal",
+        "duplicate",
+        "symlink",
+        "extraarchive",
+    ],
+)
+def test_signpath_bad_response_never_replaces_either_original(staged, tmp_path, change):
+    folder, _, _ = staged
+    before = signing.records(folder)
+    response = signpath_response(folder, tmp_path / "result", change)
+    with pytest.raises(signing.SigningError):
+        signing.import_signpath_result(folder, response)
+    assert signing.records(folder) == before
 
 
 def mock_sign(folder, monkeypatch):

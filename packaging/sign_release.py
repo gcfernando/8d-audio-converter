@@ -23,6 +23,17 @@ class SigningError(RuntimeError):
     """Signing evidence is missing, inconsistent or untrusted."""
 
 
+def signing_provider(environment: dict[str, str]) -> str:
+    """A single explicit selector prevents ambiguous or silently disabled signing."""
+    enabled = environment.get("AUDIO8D_SIGNING_ENABLED", "")
+    provider = environment.get("AUDIO8D_SIGNING_PROVIDER", "") or "azure"
+    if enabled not in ("", "false", "true") or provider not in ("azure", "signpath"):
+        raise SigningError(
+            "Signing requires empty/false/true and exactly one azure/signpath provider"
+        )
+    return provider if enabled == "true" else ""
+
+
 def digest(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
@@ -257,6 +268,82 @@ def stage(archive: Path, destination: Path, checksum: Path) -> Path:
     return destination
 
 
+def export_signpath_request(folder: Path, destination: Path) -> Path:
+    """Export only the two tested frontends, not snapshots or third-party files."""
+    plain_path(folder.absolute())
+    plain_path(destination.absolute())
+    folder = folder.resolve()
+    snapshot_path = folder.with_name(folder.name + ".signing-input.json")
+    plain_path(snapshot_path)
+    snapshot = json.loads(snapshot_path.read_text(encoding="utf-8"))
+    if (
+        snapshot.get("folder") != str(folder)
+        or snapshot.get("schemaVersion") != 1
+        or records(folder) != snapshot["files"]
+        or destination.exists()
+        or destination.resolve() == folder
+        or folder in destination.resolve().parents
+    ):
+        raise SigningError(
+            "SignPath export needs unchanged input and a fresh external destination"
+        )
+    destination.mkdir(parents=True)
+    for name in TARGETS:
+        target = destination / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(folder / name, target)
+    return destination
+
+
+def import_signpath_result(folder: Path, directory: Path) -> Path:
+    """Import only checked frontend bytes from the unextracted provider artifact."""
+    plain_path(folder.absolute())
+    plain_path(directory.absolute())
+    folder = folder.resolve()
+    snapshot_path = folder.with_name(folder.name + ".signing-input.json")
+    plain_path(snapshot_path)
+    snapshot = json.loads(snapshot_path.read_text(encoding="utf-8"))
+    if (
+        snapshot.get("folder") != str(folder)
+        or snapshot.get("schemaVersion") != 1
+        or records(folder) != snapshot["files"]
+    ):
+        raise SigningError("SignPath import requires unchanged staged input")
+    downloads = list(directory.iterdir())
+    if (
+        len(downloads) != 1
+        or linked(downloads[0])
+        or not downloads[0].is_file()
+        or downloads[0].stat().st_size > LIMIT
+    ):
+        raise SigningError("Exactly one ordinary SignPath result archive is required")
+    originals = {record["path"]: record for record in snapshot["peFiles"]}
+    if set(originals) != set(TARGETS) or len(snapshot["peFiles"]) != 2:
+        raise SigningError("Exactly two original frontend records are required")
+    pending = {}
+    with zipfile.ZipFile(downloads[0]) as bundle:
+        files = members(bundle)
+        if set(files) != set(TARGETS):
+            raise SigningError(
+                "SignPath result must contain exactly the two requested frontends"
+            )
+        for name in TARGETS:
+            data = bundle.read(
+                files[name]
+            )  # CRC is checked before either frontend is replaced.
+            prior = originals[name]
+            content, signed = pe_content(data, prior["unsignedSize"])
+            if not signed or content != prior["authenticodeContentSha256"]:
+                raise SigningError(
+                    "SignPath changed executable content or did not sign both frontends"
+                )
+            pending[name] = data
+    for name, data in pending.items():
+        (folder / name).write_bytes(data)
+    # The common finalizer must still check actual Windows trust and publisher.
+    return folder
+
+
 def signature_evidence(path: Path, publisher: str) -> dict:
     """Windows trust evaluation; no package executable is launched."""
     if os.name != "nt" or not publisher.strip():
@@ -434,6 +521,7 @@ def verify_signed_archive(archive: Path, publisher: str | None = None) -> dict:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
+    commands.add_parser("check-provider")
     prepare = commands.add_parser("stage")
     prepare.add_argument("archive", type=Path)
     prepare.add_argument("destination", type=Path)
@@ -442,9 +530,21 @@ def main() -> None:
     complete.add_argument("folder", type=Path)
     complete.add_argument("archive", type=Path)
     complete.add_argument("--publisher", required=True)
+    export = commands.add_parser("export-signpath")
+    export.add_argument("folder", type=Path)
+    export.add_argument("destination", type=Path)
+    receive = commands.add_parser("import-signpath")
+    receive.add_argument("folder", type=Path)
+    receive.add_argument("directory", type=Path)
     args = parser.parse_args()
-    if args.command == "stage":
+    if args.command == "check-provider":
+        print(signing_provider(dict(os.environ)) or "disabled")
+    elif args.command == "stage":
         print(stage(args.archive, args.destination, args.checksum))
+    elif args.command == "export-signpath":
+        print(export_signpath_request(args.folder, args.destination))
+    elif args.command == "import-signpath":
+        print(import_signpath_result(args.folder, args.directory))
     else:
         print(finalize(args.folder, args.archive, args.publisher))
 

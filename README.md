@@ -31,6 +31,8 @@ Keep all companion files together. These packages bundle Python and FFmpeg; a se
 
 The release workflow publishes checked Windows and Linux packages after successful pushes to `main`. Verify each ZIP against **SHA256SUMS.txt** from the same release before extracting. If a build fails, use a complete earlier release, the retained packages above or a source checkout; failed builds do not publish partial releases. The application version remains **1.0.0**, with separate build tags identifying automated downloads.
 
+Audio8D is free to use without purchasing a certificate. The proposed [Code signing policy](docs/code-signing.md#code-signing-policy) describes SignPath Foundation's free program; enrollment has not been submitted and no provider approval exists. Signing cannot guarantee that SmartScreen will never warn.
+
 In the window:
 
 1. Add a song or folder.

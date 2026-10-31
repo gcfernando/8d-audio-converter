@@ -11,6 +11,7 @@ jobs:
   packages:
     env:
       AUDIO8D_SIGNING_ENABLED: ${{ vars.AUDIO8D_SIGNING_ENABLED }}
+      AUDIO8D_SIGNING_PROVIDER: ${{ vars.AUDIO8D_SIGNING_PROVIDER }}
     strategy:
       fail-fast: false
       matrix:
@@ -40,7 +41,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python -c "import os,sys; sys.exit(0 if os.getenv('AUDIO8D_SIGNING_ENABLED','') in ('','false','true') else 'AUDIO8D_SIGNING_ENABLED must be empty, false or true')"
+          python packaging/sign_release.py check-provider
           python .github/scripts/check_repository.py
           python -m unittest discover -s .github/scripts -p test_publish_main_release.py -v
       - name: Build and verify native application package
@@ -99,7 +100,10 @@ jobs:
           retention-days: 30
   sign-windows:
     needs: packages
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.AUDIO8D_SIGNING_ENABLED == 'true'
+    if: >-
+      github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+      vars.AUDIO8D_SIGNING_ENABLED == 'true' &&
+      (vars.AUDIO8D_SIGNING_PROVIDER == '' || vars.AUDIO8D_SIGNING_PROVIDER == 'azure')
     runs-on: windows-2025
     timeout-minutes: 20
     permissions:
@@ -181,13 +185,105 @@ jobs:
             artifacts/signed/*.sha256
           if-no-files-found: error
           retention-days: 30
+  sign-signpath:
+    needs: packages
+    if: >-
+      github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+      vars.AUDIO8D_SIGNING_ENABLED == 'true' && vars.AUDIO8D_SIGNING_PROVIDER == 'signpath'
+    runs-on: windows-2025
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      actions: read
+    env:
+      SIGNPATH_ORGANIZATION_ID: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+      SIGNPATH_PROJECT_SLUG: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+      SIGNPATH_SIGNING_POLICY_SLUG: ${{ vars.SIGNPATH_SIGNING_POLICY_SLUG }}
+      SIGNPATH_ARTIFACT_CONFIGURATION_SLUG: ${{ vars.SIGNPATH_ARTIFACT_CONFIGURATION_SLUG }}
+      AUDIO8D_SIGNING_PUBLISHER: ${{ vars.AUDIO8D_SIGNING_PUBLISHER }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
+        with:
+          python-version: '3.12'
+      - name: Require approved SignPath identifiers and submitter token
+        shell: pwsh
+        env:
+          SIGNPATH_API_TOKEN: ${{ secrets.SIGNPATH_API_TOKEN }}
+        run: |
+          foreach ($name in @('SIGNPATH_ORGANIZATION_ID','SIGNPATH_PROJECT_SLUG','SIGNPATH_SIGNING_POLICY_SLUG','SIGNPATH_ARTIFACT_CONFIGURATION_SLUG','AUDIO8D_SIGNING_PUBLISHER','SIGNPATH_API_TOKEN')) {
+            if ([string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable($name))) { throw "Missing signing configuration: $name" }
+          }
+          $organization = [guid]::Empty
+          if (-not [guid]::TryParse($env:SIGNPATH_ORGANIZATION_ID, [ref]$organization)) { throw 'Invalid SignPath organization identifier' }
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: Audio8D-windows-x86_64
+          path: artifacts/unsigned
+      - name: Verify package and export only the two original frontends
+        shell: pwsh
+        run: |
+          $zip = @(Get-ChildItem artifacts/unsigned/*.zip)
+          if ($zip.Count -ne 1) { throw 'Exactly one Windows ZIP required' }
+          python packaging/sign_release.py stage $zip[0].FullName artifacts/signing-payload --checksum ([IO.Path]::ChangeExtension($zip[0].FullName, '.sha256'))
+          if ($LASTEXITCODE -ne 0) { throw 'Signing input verification failed' }
+          python packaging/sign_release.py export-signpath artifacts/signing-payload artifacts/signpath-request
+          if ($LASTEXITCODE -ne 0) { throw 'SignPath frontend export failed' }
+      - name: Upload exact frontends for SignPath origin verification
+        id: signpath-input
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: Audio8D-signpath-request
+          path: artifacts/signpath-request/
+          if-no-files-found: error
+          retention-days: 7
+      - name: Request approved Foundation signing and wait for manual approval
+        uses: signpath/github-action-submit-signing-request@f6d04783b4569d051e0c80105fe66e82819d0092 # v3.0
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ env.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ env.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ env.SIGNPATH_SIGNING_POLICY_SLUG }}
+          artifact-configuration-slug: ${{ env.SIGNPATH_ARTIFACT_CONFIGURATION_SLUG }}
+          github-artifact-id: ${{ steps.signpath-input.outputs.artifact-id }}
+          github-token: ${{ github.token }}
+          wait-for-completion: true
+          wait-for-completion-timeout-in-seconds: 1800
+          output-artifact-directory: artifacts/signpath-result
+          skip-decompress: true
+      - name: Import checked signed frontends and verify trusted signatures
+        shell: pwsh
+        run: |
+          python packaging/sign_release.py import-signpath artifacts/signing-payload artifacts/signpath-result
+          if ($LASTEXITCODE -ne 0) { throw 'SignPath result integrity check failed' }
+          $zip = @(Get-ChildItem artifacts/unsigned/*.zip)
+          python packaging/sign_release.py finalize artifacts/signing-payload "artifacts/signed/$($zip[0].Name)" --publisher $env:AUDIO8D_SIGNING_PUBLISHER
+          if ($LASTEXITCODE -ne 0) { throw 'Signed Windows trust verification failed' }
+      - name: Check the actual signed GUI after repackaging
+        shell: pwsh
+        run: |
+          $zip = @(Get-ChildItem artifacts/signed/*.zip)
+          if ($zip.Count -ne 1) { throw 'Exactly one signed Windows ZIP required' }
+          python packaging/gui_smoke.py $zip[0].FullName
+          if ($LASTEXITCODE -ne 0) { throw 'Signed GUI lifecycle regression failed' }
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: Audio8D-windows-x86_64-signed
+          path: |
+            artifacts/signed/*.zip
+            artifacts/signed/*.sha256
+          if-no-files-found: error
+          retention-days: 30
   publish-main:
-    needs: [packages, sign-windows]
+    needs: [packages, sign-windows, sign-signpath]
     if: >-
       always() && github.event_name == 'push' && github.ref == 'refs/heads/main' &&
       needs.packages.result == 'success' &&
-      (needs.sign-windows.result == 'success' ||
-      (needs.sign-windows.result == 'skipped' && vars.AUDIO8D_SIGNING_ENABLED != 'true'))
+      ((needs.sign-windows.result == 'success' && needs.sign-signpath.result == 'skipped') ||
+      (needs.sign-signpath.result == 'success' && needs.sign-windows.result == 'skipped') ||
+      (needs.sign-windows.result == 'skipped' && needs.sign-signpath.result == 'skipped' && vars.AUDIO8D_SIGNING_ENABLED != 'true'))
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -205,12 +301,12 @@ jobs:
           path: artifacts/main-download
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
-          name: ${{ needs.sign-windows.result == 'success' && 'Audio8D-windows-x86_64-signed' || 'Audio8D-windows-x86_64' }}
+          name: ${{ (needs.sign-windows.result == 'success' || needs.sign-signpath.result == 'success') && 'Audio8D-windows-x86_64-signed' || 'Audio8D-windows-x86_64' }}
           path: artifacts/main-download
       - name: Publish both verified platform packages
         env:
           GH_TOKEN: ${{ github.token }}
-          AUDIO8D_SIGNED_WINDOWS: ${{ needs.sign-windows.result == 'success' && 'true' || 'false' }}
+          AUDIO8D_SIGNED_WINDOWS: ${{ (needs.sign-windows.result == 'success' || needs.sign-signpath.result == 'success') && 'true' || 'false' }}
         shell: bash
         run: |
           set -euo pipefail
