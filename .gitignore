@@ -3,6 +3,7 @@
 __pycache__/
 *.py[cod]
 build/
+artifacts/
 *.egg-info/
 
 # bin holds only the release ZIPs made by packaging/build_release.py (one per system)
